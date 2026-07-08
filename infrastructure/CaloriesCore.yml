@@ -17,7 +17,7 @@ Parameters:
   SourceCodeBucketName:
     Type: String
     Description: "The name of the S3 bucket where the Lambda function code is stored"
-  SourceCodeCodeS3Key:
+  SourceCodeS3Key:
     Type: String
     Description: "The key of the S3 object containing the Lambda function code"
   LambdaVersion:
@@ -312,7 +312,7 @@ Resources:
       Runtime: nodejs20.x
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
-        S3Key: !Ref SourceCodeCodeS3Key
+        S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
   RegistrationLambdaFunction:
@@ -325,7 +325,7 @@ Resources:
       Runtime: nodejs20.x
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
-        S3Key: !Ref SourceCodeCodeS3Key
+        S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
   FoodAnalysisLambdaFunction:
@@ -338,7 +338,7 @@ Resources:
       Runtime: nodejs20.x
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
-        S3Key: !Ref SourceCodeCodeS3Key
+        S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
   FoodAnalysisTriggeredLambdaFunction:
@@ -351,7 +351,7 @@ Resources:
       Runtime: nodejs20.x
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
-        S3Key: !Ref SourceCodeCodeS3Key
+        S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
   FoodLoggingLambdaFunction:
@@ -364,7 +364,7 @@ Resources:
       Runtime: nodejs20.x
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
-        S3Key: !Ref SourceCodeCodeS3Key
+        S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
   FoodIntakeHistoryLambdaFunction:
@@ -377,7 +377,7 @@ Resources:
       Runtime: nodejs20.x
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
-        S3Key: !Ref SourceCodeCodeS3Key
+        S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
   # pool application
