@@ -14,6 +14,12 @@ Parameters:
   UploadingBucketName:
     Type: String
     Description: "The name of the S3 bucket for uploading files"  
+  SourceCodeBucketName:
+    Type: String
+    Description: "The name of the S3 bucket where the Lambda function code is stored"
+  SourceCodeCodeS3Key:
+    Type: String
+    Description: "The key of the S3 object containing the Lambda function code"
   LambdaVersion:
     Type: String
     Description: The version of the Lambda function code  

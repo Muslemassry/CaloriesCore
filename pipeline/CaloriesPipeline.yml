@@ -210,6 +210,8 @@ Resources:
                 ParameterOverrides: !Sub |
                   {
                     "Environment": "${environmentName}",
+                    "SourceCodeBucketName": "${SourceCodeBucketName}",
+                    "SourceCodeS3Key": ${SourceCodeS3Key},
                     "LambdaVersion": "${buildVersion}",
                     "UserPoolId": "${UserPoolId}",
                     "UploadingBucketName": "${UploadingBucketName}"
