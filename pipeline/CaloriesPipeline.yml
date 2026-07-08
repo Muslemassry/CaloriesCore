@@ -1,0 +1,239 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SourceCodeBucketName:
+    Type: String
+    Description: The name of the S3 bucket where the Lambda function code is stored
+    Default: high-avaliable-bucket
+  SourceCodeCodeS3Key:
+    Type: String
+    Description: The key of the S3 object containing the Lambda function code
+    Default: lambda-code
+  ZipFileName:
+    Type: String
+    Description: The name of the zip file containing the Lambda function code
+    Default: lambda-code.zip
+  environmentName:
+    Type: String
+    Description: The name of the environment to be deployed
+    AllowedValues: [dev, uat ,prod]
+  GitHubConnectionArn:
+    Type: String
+    Description: The ARN of the GitHub connection in AWS CodeStar Connections
+    Default: arn:aws:codeconnections:us-east-1:864138843099:connection/ee182202-7470-4e71-9733-643eb335a99a
+  FullRepositoryId:
+    Type: String
+    Description: The full repository ID in the format "owner/repository"
+    Default: Muslemassry/CaloriesCore
+  buildVersion:
+    Type: String
+    Description: The version of the build to be deployed
+    Default: V1
+  deploymentNumber:
+    Type: String
+    Description: The deployment number to be used in log group naming
+    Default: D1
+  UserPoolId:
+    Type: String
+    Description: "The ID of the Cognito User Pool"
+  UploadingBucketName:
+    Type: String
+    Description: "The name of the S3 bucket for uploading files"
+Resources:
+  CodePipelineServiceRoleTopullfromGithub:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodePipelineServiceRoleTopullfromGithubPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketVersioning
+                  - s3:PutObject
+                Resource:
+                  - !Sub arn:aws:s3:::${SourceCodeBucketName} 
+                  - !Sub arn:aws:s3:::${SourceCodeBucketName}/*
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource: !GetAtt CodeBuildProject.Arn
+              - Effect: Allow
+                Action:
+                  - codestar-connections:UseConnection
+                Resource: !Ref GitHubConnectionArn
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:ValidateTemplate
+                Resource: 
+                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CarsDemoStack-${buildVersion}-${environmentName}/*"
+
+  CodeBuildServiceRoleToAccessS3:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildServiceRoleToAccessS3Policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketVersioning
+                  - s3:PutObject
+                Resource:
+                  - !Sub arn:aws:s3:::${SourceCodeBucketName} 
+                  - !Sub arn:aws:s3:::${SourceCodeBucketName}/*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "CarsDemoProject-${buildVersion}-${environmentName}"
+      Description: Build project for CodePipeline
+      ServiceRole: !GetAtt CodeBuildServiceRoleToAccessS3.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0  # Adjust based on your runtime needs
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref environmentName
+          - Name: ARTIFACTS_BUCKET
+            Value: !Ref SourceCodeBucketName
+          - Name: SourceCodeS3Key
+            Value: !Ref SourceCodeS3Key
+          - Name: ZipFileName
+            Value: !Ref ZipFileName
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: codeBuild.yml  # Your existing buildspec file
+      TimeoutInMinutes: 60
+      QueuedTimeoutInMinutes: 480
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "CarsDemoPipeline-${buildVersion}-${environmentName}"
+      RoleArn: !GetAtt CodePipelineServiceRoleTopullfromGithub.Arn
+      PipelineType: V2
+      Triggers:
+        - ProviderType: CodeStarSourceConnection
+          GitConfiguration:
+            SourceActionName: SourceAction
+            Push:
+              - Branches:
+                  Includes:
+                    - main
+      ArtifactStore:
+        Type: S3
+        Location: !Ref SourceCodeBucketName
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: 1
+              Configuration:
+                ConnectionArn: !Ref GitHubConnectionArn
+                FullRepositoryId: !Ref FullRepositoryId
+                BranchName: main  # Adjust if needed
+                DetectChanges: true
+              OutputArtifacts:
+                - Name: SourceOutput
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                StackName: !Sub "CarsDemoStack-${buildVersion}-${environmentName}"
+                TemplatePath: BuildOutput::infrastructure/carsServerLessApp.yml
+                RoleArn: !GetAtt CloudFormationExecutionRole.Arn
+                ParameterOverrides: !Sub |
+                  {
+                    "environmentName": "${environmentName}",
+                    "SourceCodeBucketName": "${SourceCodeBucketName}",
+                    "SourceCodeS3Key": {"Fn::GetParam": ["BuildOutput", "params.json", "UniqueS3Key"]},
+                    "LambdaVersion": "${buildVersion}",
+                    "deploymentNumber": "${deploymentNumber}",
+                    "UserPoolId": "${UserPoolId}",
+                    "UploadingBucketName": "${UploadingBucketName}"
+                  }
+                Capabilities: CAPABILITY_NAMED_IAM
+              InputArtifacts:
+                - Name: BuildOutput
+  CloudFormationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: CloudFormationExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "*"

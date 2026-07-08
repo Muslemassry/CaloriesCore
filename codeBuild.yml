@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+  pre_build:
+    commands:
+      - cd src/lambda
+      - npm init -y
+      - npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb
+      - npm ci
+  build:
+    commands:
+      - echo Build started on `date`
+      - export UNIQUE_ZIP="${ZipFileName%.zip}-${CODEBUILD_BUILD_NUMBER}.zip"
+      - zip $UNIQUE_ZIP *.js
+      - cd ../../
+      - cp src/lambda/$UNIQUE_ZIP .
+  post_build:
+    commands:
+      - echo "Uploading Lambda code to S3..."
+      - aws s3 cp $UNIQUE_ZIP s3://${ARTIFACTS_BUCKET}/${CodeS3Key}/$UNIQUE_ZIP
+      - echo "Lambda code uploaded to s3://${ARTIFACTS_BUCKET}/${CodeS3Key}/$UNIQUE_ZIP"
+      - printf '{"UniqueS3Key":"%s/%s"}' "${CodeS3Key}" "$UNIQUE_ZIP" > params.json
+
+artifacts:
+  files:
+    - infrastructure/CaloriesCore.yml
+    - params.json

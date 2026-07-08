@@ -1,0 +1,598 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  Environment:
+    Type: String
+    Default: "dev"
+    AllowedValues:
+      - dev
+      - uat
+      - prod
+    Description: "The environment for the S3 bucket (dev, uat or prod)"
+  UserPoolId:
+    Type: String
+    Description: "The ID of the Cognito User Pool"
+  UploadingBucketName:
+    Type: String
+    Description: "The name of the S3 bucket for uploading files"    
+Resources:
+  # role for lambda functions to access dynamodb tables
+  RoleForLmbdaToAccessDynamoDB:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy1"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  # role for lambda functions to access cognito user pool
+  RoleForLoginLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-LoginRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaCognitoPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:ListUsers
+                  - cognito-idp:AdminUpdateUserAttributes
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy2"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  RoleForRegistrationLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-RegistrationRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaCognitoPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:ListUsers
+                  - cognito-idp:AdminUpdateUserAttributes
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaSESSendEmailPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy3"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  RoleForFoodAnalysisLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-FoodAnalysisRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaS3Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaLogsPolicy4"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  RoleForFoodAnalysisTriggeredLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-TriggeredLambdaRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaS3Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: "*" 
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaBedrockPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: "*" 
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaLogsPolicy5"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  # role for lambda functions to access s3 bucket
+  RoleForLmbdaToAccessS3:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaS3Role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaS3Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaLogsPolicy6"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  # lambda functions
+  LoginLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "LoginLambdaFunction-${Environment}"
+      Role: !GetAtt RoleForLoginLambdaFunction.Arn
+      Handler: LoginLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeCodeS3Key
+      Architectures:
+        - x86_64
+  RegistrationLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "RegistrationLambdaFunction-${Environment}"
+      Role: !GetAtt RoleForRegistrationLambdaFunction.Arn
+      Handler: RegistrationLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeCodeS3Key
+      Architectures:
+        - x86_64
+  FoodAnalysisLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "FoodAnalysisLambdaFunction-${Environment}"
+      Role: !GetAtt RoleForFoodAnalysisLambdaFunction.Arn
+      Handler: FoodAnalysisLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeCodeS3Key
+      Architectures:
+        - x86_64
+  FoodAnalysisTriggeredLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "FoodAnalysisTriggeredLambdaFunction-${Environment}"
+      Role: !GetAtt RoleForFoodAnalysisTriggeredLambdaFunction.Arn
+      Handler: FoodAnalysisTriggeredLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeCodeS3Key
+      Architectures:
+        - x86_64
+  FoodLoggingLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "FoodLoggingLambdaFunction-${Environment}"
+      Role: !GetAtt RoleForLmbdaToAccessDynamoDB.Arn
+      Handler: FoodLoggingLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeCodeS3Key
+      Architectures:
+        - x86_64
+  FoodIntakeHistoryLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "FoodIntakeHistoryLambdaFunction-${Environment}"
+      Role: !GetAtt RoleForLmbdaToAccessDynamoDB.Arn
+      Handler: FoodIntakeHistoryLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeCodeS3Key
+      Architectures:
+        - x86_64
+  # pool application
+  CaloriesUserpoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "CaloriesUserpoolClient-${Environment}"
+      UserPoolId: !Ref UserPoolId
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
+  # api gatewayrole for logging
+  RoleForApiGatwayToaccessCloudWatch:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+  ApiGatewayAccountSettings:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt RoleForApiGatwayToaccessCloudWatch.Arn
+  # api gateway
+  CaloriesCoreFunctionsApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "CaloriesCoreFunctionsApi-${Environment}"
+      Description: "API Gateway for Calories Core Functions"
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+  # reource
+  LoginResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "login"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  RegistrationResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "register"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  FoodAnalysisResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "food-analysis"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  FoodLoggingResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "food-logging"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  FoodIntakeHistoryResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "food-intake-history"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  #authorizer
+  ApiGatewayCognitoAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: ApiGatewayCognitoAuthorizer
+      Type: COGNITO_USER_POOLS
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ProviderARNs:
+        - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPoolId}"
+      IdentitySource: method.request.header.Authorization
+  # method
+  LoginMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref LoginResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+  RegistrationPublicMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref RegistrationResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
+  FoodAnalysisMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref FoodAnalysisResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FoodAnalysisLambdaFunction.Arn}/invocations
+  FoodLoggingMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref FoodLoggingResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FoodLoggingLambdaFunction.Arn}/invocations
+  FoodIntakeHistoryMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref FoodIntakeHistoryResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FoodIntakeHistoryLambdaFunction.Arn}/invocations
+  # permission
+  LoginLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoginLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/login
+  RegistrationLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RegistrationLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/registration
+  FoodAnalysisLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FoodAnalysisLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/food-analysis
+  FoodLoggingLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FoodLoggingLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/food-logging
+  FoodIntakeHistoryLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FoodIntakeHistoryLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/GET/food-intake-history
+  Deployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+    DependsOn:
+      - FoodLoggingMethod
+      - FoodAnalysisMethod
+      - FoodIntakeHistoryMethod
+      - RegistrationPublicMethod
+      - LoginMethod
+  Stage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: !Sub "${Environment}"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      DeploymentId: !Ref Deployment
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+  EventBridgeRuleForFoodAnalysisTriggeredLambdaFunction:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "FoodAnalysisTriggeredLambdaFunctionRule-${Environment}"
+      State: "ENABLED"
+      EventPattern:
+        source:
+          - "aws.s3"
+        detail-type:
+          - "Object Created"
+        detail:
+          bucket:
+            name:
+              - !Ref UploadingBucketName
+      Targets:
+        - Arn: !GetAtt FoodAnalysisTriggeredLambdaFunction.Arn
+          Id: "FoodAnalysisTriggeredLambdaFunctionTarget"
+  AllowEventBridgeToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt FoodAnalysisTriggeredLambdaFunction.Arn
+      Principal: 'events.amazonaws.com'
+      SourceArn: !Sub "arn:aws:s3:::${UploadingBucketName}"
+Outputs:
+  ApiListEndpoint:
+    Description: "API Gateway endpoint BASE URL for the API"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
