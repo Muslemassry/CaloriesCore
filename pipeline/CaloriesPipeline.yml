@@ -24,6 +24,10 @@ Parameters:
     Type: String
     Description: The full repository ID in the format "owner/repository"
     Default: Muslemassry/CaloriesCore
+  BranchName:
+    Type: String
+    Description: The branch name to be used in the pipeline
+    Default: main
   buildVersion:
     Type: String
     Description: The version of the build to be deployed
@@ -86,8 +90,7 @@ Resources:
                   - cloudformation:GetTemplateSummary
                   - cloudformation:ValidateTemplate
                 Resource: 
-                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CarsDemoStack-${buildVersion}-${environmentName}/*"
-
+                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}-${buildVersion}-${environmentName}/*"
   CodeBuildServiceRoleToAccessS3:
     Type: AWS::IAM::Role
     Properties:
@@ -122,7 +125,7 @@ Resources:
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub "CarsDemoProject-${buildVersion}-${environmentName}"
+      Name: !Sub "${AWS::StackName}-${buildVersion}-${environmentName}"
       Description: Build project for CodePipeline
       ServiceRole: !GetAtt CodeBuildServiceRoleToAccessS3.Arn
       Artifacts:
@@ -142,13 +145,13 @@ Resources:
             Value: !Ref ZipFileName
       Source:
         Type: CODEPIPELINE
-        BuildSpec: codeBuild.yml  # Your existing buildspec file
+        BuildSpec: codeBuild.yml
       TimeoutInMinutes: 60
       QueuedTimeoutInMinutes: 480
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "CarsDemoPipeline-${buildVersion}-${environmentName}"
+      Name: !Sub "${AWS::StackName}-${buildVersion}-${environmentName}"
       RoleArn: !GetAtt CodePipelineServiceRoleTopullfromGithub.Arn
       PipelineType: V2
       Triggers:
@@ -174,7 +177,7 @@ Resources:
               Configuration:
                 ConnectionArn: !Ref GitHubConnectionArn
                 FullRepositoryId: !Ref FullRepositoryId
-                BranchName: main  # Adjust if needed
+                BranchName: !Ref BranchName
                 DetectChanges: true
               OutputArtifacts:
                 - Name: SourceOutput
@@ -202,12 +205,12 @@ Resources:
                 Version: 1
               Configuration:
                 ActionMode: CREATE_UPDATE
-                StackName: !Sub "CarsDemoStack-${buildVersion}-${environmentName}"
-                TemplatePath: BuildOutput::infrastructure/carsServerLessApp.yml
+                StackName: !Sub "${AWS::StackName}-${buildVersion}-${environmentName}"
+                TemplatePath: BuildOutput::infrastructure/CaloriesCore.yml
                 RoleArn: !GetAtt CloudFormationExecutionRole.Arn
                 ParameterOverrides: !Sub |
                   {
-                    "environmentName": "${environmentName}",
+                    "Environment": "${environmentName}",
                     "SourceCodeBucketName": "${SourceCodeBucketName}",
                     "SourceCodeS3Key": {"Fn::GetParam": ["BuildOutput", "params.json", "UniqueS3Key"]},
                     "LambdaVersion": "${buildVersion}",
