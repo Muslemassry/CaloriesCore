@@ -4,7 +4,7 @@ Parameters:
     Type: String
     Description: The name of the S3 bucket where the Lambda function code is stored
     Default: high-avaliable-bucket
-  SourceCodeCodeS3Key:
+  SourceCodeS3Key:
     Type: String
     Description: The key of the S3 object containing the Lambda function code
     Default: lambda-code
