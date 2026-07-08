@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  Email:
+    Type: String
+    Description: "Email address to receive notifications"
+    Default: "m.amaragy@gmail.com"
+Resources:
+  SESEmailSenderIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref Email
+Outputs:
+  SESEmailSenderIdentityArn:
+    Description: "The ARN of the SES Email Identity"
+    Value: !Ref SESEmailSenderIdentity

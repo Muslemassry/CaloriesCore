@@ -3,7 +3,6 @@ Parameters:
   SourceCodeBucketName:
     Type: String
     Description: The name of the S3 bucket where the Lambda function code is stored
-    Default: high-avaliable-bucket
   SourceCodeS3Key:
     Type: String
     Description: The key of the S3 object containing the Lambda function code
@@ -211,10 +210,7 @@ Resources:
                 ParameterOverrides: !Sub |
                   {
                     "Environment": "${environmentName}",
-                    "SourceCodeBucketName": "${SourceCodeBucketName}",
-                    "SourceCodeS3Key": {"Fn::GetParam": ["BuildOutput", "params.json", "UniqueS3Key"]},
                     "LambdaVersion": "${buildVersion}",
-                    "deploymentNumber": "${deploymentNumber}",
                     "UserPoolId": "${UserPoolId}",
                     "UploadingBucketName": "${UploadingBucketName}"
                   }

@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  Environment:
+    Type: String
+    Default: "dev"
+    AllowedValues:
+      - dev
+      - uat
+      - prod
+    Description: "The environment for the S3 bucket (dev, uat or prod)"
+Resources:
+  Userpool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "UserPool-${Environment}"
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+Outputs:
+  UserPoolId:
+    Description: "The ID of the Cognito User Pool"
+    Value: !Ref Userpool

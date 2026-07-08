@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  Environment:
+    Type: String
+    Default: "dev"
+    AllowedValues:
+      - dev
+      - uat
+      - prod
+    Description: "The environment for the S3 bucket (dev, uat or prod)"
+Resources:
+  UserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "UserTable-${Environment}"
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: N
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: EmailIndex
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  DayIntake:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "DayIntake-${Environment}"
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: N
+        - AttributeName: date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: date
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  HistoryIntake:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "HistoryIntake-${Environment}"
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: N
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  MealLog:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "MealLog-${Environment}"
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: N
+        - AttributeName: date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: date
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  MealAnalysisRequest:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "MealAnalysisRequest-${Environment}"
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: N
+        - AttributeName: requestId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: requestId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+Outputs:
+  UserTable:
+    Description: The name of the DynamoDB table
+    Value: !Ref UserTable
+  DayIntake:
+    Description: The name of the DynamoDB table
+    Value: !Ref DayIntake
+  HistoryIntake:
+    Description: The name of the DynamoDB table
+    Value: !Ref HistoryIntake
+  MealLog:
+    Description: The name of the DynamoDB table
+    Value: !Ref MealLog
+  MealAnalysisRequest:
+    Description: The name of the DynamoDB table
+    Value: !Ref MealAnalysisRequest

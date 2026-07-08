@@ -13,7 +13,10 @@ Parameters:
     Description: "The ID of the Cognito User Pool"
   UploadingBucketName:
     Type: String
-    Description: "The name of the S3 bucket for uploading files"    
+    Description: "The name of the S3 bucket for uploading files"  
+  LambdaVersion:
+    Type: String
+    Description: The version of the Lambda function code  
 Resources:
   # role for lambda functions to access dynamodb tables
   RoleForLmbdaToAccessDynamoDB:
@@ -296,7 +299,7 @@ Resources:
   LoginLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "LoginLambdaFunction-${Environment}"
+      FunctionName: !Sub "LoginLambdaFunction-${Environment}-${LambdaVersion}"
       Role: !GetAtt RoleForLoginLambdaFunction.Arn
       Handler: LoginLambda.handler
       Timeout: 5
@@ -309,7 +312,7 @@ Resources:
   RegistrationLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "RegistrationLambdaFunction-${Environment}"
+      FunctionName: !Sub "RegistrationLambdaFunction-${Environment}-${LambdaVersion}"
       Role: !GetAtt RoleForRegistrationLambdaFunction.Arn
       Handler: RegistrationLambda.handler
       Timeout: 5
@@ -322,7 +325,7 @@ Resources:
   FoodAnalysisLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "FoodAnalysisLambdaFunction-${Environment}"
+      FunctionName: !Sub "FoodAnalysisLambdaFunction-${Environment}-${LambdaVersion}"
       Role: !GetAtt RoleForFoodAnalysisLambdaFunction.Arn
       Handler: FoodAnalysisLambda.handler
       Timeout: 5
@@ -335,7 +338,7 @@ Resources:
   FoodAnalysisTriggeredLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "FoodAnalysisTriggeredLambdaFunction-${Environment}"
+      FunctionName: !Sub "FoodAnalysisTriggeredLambdaFunction-${Environment}-${LambdaVersion}"
       Role: !GetAtt RoleForFoodAnalysisTriggeredLambdaFunction.Arn
       Handler: FoodAnalysisTriggeredLambda.handler
       Timeout: 5
@@ -348,7 +351,7 @@ Resources:
   FoodLoggingLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "FoodLoggingLambdaFunction-${Environment}"
+      FunctionName: !Sub "FoodLoggingLambdaFunction-${Environment}-${LambdaVersion}"
       Role: !GetAtt RoleForLmbdaToAccessDynamoDB.Arn
       Handler: FoodLoggingLambda.handler
       Timeout: 5
@@ -361,7 +364,7 @@ Resources:
   FoodIntakeHistoryLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "FoodIntakeHistoryLambdaFunction-${Environment}"
+      FunctionName: !Sub "FoodIntakeHistoryLambdaFunction-${Environment}-${LambdaVersion}"
       Role: !GetAtt RoleForLmbdaToAccessDynamoDB.Arn
       Handler: FoodIntakeHistoryLambda.handler
       Timeout: 5

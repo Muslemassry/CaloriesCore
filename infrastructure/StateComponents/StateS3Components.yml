@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  Environment:
+    Type: String
+    Default: "dev"
+    AllowedValues:
+      - dev
+      - uat
+      - prod
+    Description: "The environment for the S3 bucket (dev, uat or prod)"
+Resources:
+  UsersFilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "users-files-bucket-${Environment}-${AWS::AccountId}"
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+  SourceCodeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "source-code-bucket-${Environment}-${AWS::AccountId}"
+Outputs:
+  UsersFilesBucketName:
+    Description: "The name of the S3 bucket for user files"
+    Value: !Ref UsersFilesBucket
+  SourceCodeBucketName:
+    Description: "The name of the S3 bucket for source code"
+    Value: !Ref SourceCodeBucket
