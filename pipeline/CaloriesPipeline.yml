@@ -89,7 +89,7 @@ Resources:
                   - cloudformation:GetTemplateSummary
                   - cloudformation:ValidateTemplate
                 Resource: 
-                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}-${buildVersion}-${environmentName}/*"
+                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}-${buildVersion}-${environmentName}-Core/*"
   CodeBuildServiceRoleToAccessS3:
     Type: AWS::IAM::Role
     Properties:
