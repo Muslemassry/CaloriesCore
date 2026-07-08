@@ -204,7 +204,7 @@ Resources:
                 Version: 1
               Configuration:
                 ActionMode: CREATE_UPDATE
-                StackName: !Sub "${AWS::StackName}-${buildVersion}-${environmentName}"
+                StackName: !Sub "${AWS::StackName}-${buildVersion}-${environmentName}-Core"
                 TemplatePath: BuildOutput::infrastructure/CaloriesCore.yml
                 RoleArn: !GetAtt CloudFormationExecutionRole.Arn
                 ParameterOverrides: !Sub |
