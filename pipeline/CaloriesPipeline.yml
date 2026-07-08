@@ -138,7 +138,7 @@ Resources:
             Value: !Ref environmentName
           - Name: ARTIFACTS_BUCKET
             Value: !Ref SourceCodeBucketName
-          - Name: SourceCodeS3Key
+          - Name: CodeS3Key
             Value: !Ref SourceCodeS3Key
           - Name: ZipFileName
             Value: !Ref ZipFileName
@@ -211,7 +211,7 @@ Resources:
                   {
                     "Environment": "${environmentName}",
                     "SourceCodeBucketName": "${SourceCodeBucketName}",
-                    "SourceCodeS3Key": ${SourceCodeS3Key},
+                    "SourceCodeS3Key": {"Fn::GetParam": ["BuildOutput", "params.json", "UniqueS3Key"]},
                     "LambdaVersion": "${buildVersion}",
                     "UserPoolId": "${UserPoolId}",
                     "UploadingBucketName": "${UploadingBucketName}"
