@@ -31,10 +31,6 @@ Parameters:
     Type: String
     Description: The version of the build to be deployed
     Default: V1
-  deploymentNumber:
-    Type: String
-    Description: The deployment number to be used in log group naming
-    Default: D1
   UserPoolId:
     Type: String
     Description: "The ID of the Cognito User Pool"
@@ -238,3 +234,47 @@ Resources:
               - Effect: Allow
                 Action: "*"
                 Resource: "*"
+  PipelineTriggerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: TriggerPipelinePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codepipeline:StartPipelineExecution
+                Resource: "*"
+  PipelineTriggerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Trigger CodePipeline on GitHub push"
+      EventPattern:
+        source:
+          - aws.codestar-connections
+        detail-type:
+          - CodeStar Source Connection Pipeline Execution Stage Change
+        resources: 
+          - !Ref GitHubConnectionArn 
+        detail:
+          referenceType:
+            - branch
+          referenceName:
+            - !Ref BranchName
+          executionStatus:
+            - Succeeded
+      State: ENABLED
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}"
+          Id: CodePipelineTarget
+          RoleArn: !GetAtt PipelineTriggerRole.Arn
