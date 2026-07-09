@@ -14,7 +14,7 @@ exports.handler = async () => {
         if (!data.Items || data.Items.length === 0) {
             throw new Error('Exception: No history items found in the database');
         }
-        console.log('Successfully fetched....', data.Items.length, 'history items');
+        console.log('Successfully fetched..', data.Items.length, 'history items');
         return {
             statusCode: 200,
             body: JSON.stringify(data.Items)
