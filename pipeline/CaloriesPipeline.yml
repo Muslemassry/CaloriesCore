@@ -254,7 +254,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - codepipeline:StartPipelineExecution
-                Resource: "*"
+                Resource:
+                  - !GetAtt CodePipeline.Arn
   PipelineTriggerRule:
     Type: AWS::Events::Rule
     Properties:
@@ -263,18 +264,19 @@ Resources:
         source:
           - aws.codestar-connections
         detail-type:
-          - CodeStar Source Connection Pipeline Execution Stage Change
-        resources: 
-          - !Ref GitHubConnectionArn 
+          - CodeStar Connections Repository State Change
+        resources:
+          - !Ref GitHubConnectionArn
         detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
           referenceType:
             - branch
           referenceName:
             - !Ref BranchName
-          executionStatus:
-            - Succeeded
       State: ENABLED
       Targets:
-        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}"
+        - Arn: !GetAtt CodePipeline.Arn
           Id: CodePipelineTarget
           RoleArn: !GetAtt PipelineTriggerRole.Arn
