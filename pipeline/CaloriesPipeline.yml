@@ -265,9 +265,11 @@ Resources:
           - aws.codestar-connections
         detail-type:
           - CodeStar Connections Repository State Change
-        resources:
-          - !Ref GitHubConnectionArn
         detail:
+          connectionArn:
+            - !Ref GitHubConnectionArn
+          fullRepositoryId:
+            - !Ref FullRepositoryId
           event:
             - referenceCreated
             - referenceUpdated
