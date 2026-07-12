@@ -18,7 +18,7 @@ Parameters:
   GitHubConnectionArn:
     Type: String
     Description: The ARN of the GitHub connection in AWS CodeStar Connections
-    Default: arn:aws:codeconnections:us-east-1:864138843099:connection/ee182202-7470-4e71-9733-643eb335a99a
+    Default: arn:aws:codeconnections:us-east-1:864138843099:connection/14fe9d2c-bee0-488f-8f80-53b6a98d9f13
   FullRepositoryId:
     Type: String
     Description: The full repository ID in the format "owner/repository"
