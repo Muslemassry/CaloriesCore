@@ -156,7 +156,7 @@ Resources:
             Push:
               - Branches:
                   Includes:
-                    - main
+                    - !Ref BranchName
       ArtifactStore:
         Type: S3
         Location: !Ref SourceCodeBucketName
@@ -173,7 +173,6 @@ Resources:
                 ConnectionArn: !Ref GitHubConnectionArn
                 FullRepositoryId: !Ref FullRepositoryId
                 BranchName: !Ref BranchName
-                DetectChanges: true
               OutputArtifacts:
                 - Name: SourceOutput
         - Name: Build
@@ -234,51 +233,3 @@ Resources:
               - Effect: Allow
                 Action: "*"
                 Resource: "*"
-  PipelineTriggerRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - events.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Policies:
-        - PolicyName: TriggerPipelinePolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - codepipeline:StartPipelineExecution
-                Resource:
-                  - !GetAtt CodePipeline.Arn
-  PipelineTriggerRule:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: "Trigger CodePipeline on GitHub push"
-      EventPattern:
-        source:
-          - aws.codestar-connections
-        detail-type:
-          - CodeStar Connections Repository State Change
-        detail:
-          connectionArn:
-            - !Ref GitHubConnectionArn
-          fullRepositoryId:
-            - !Ref FullRepositoryId
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - !Ref BranchName
-      State: ENABLED
-      Targets:
-        - Arn: !GetAtt CodePipeline.Arn
-          Id: CodePipelineTarget
-          RoleArn: !GetAtt PipelineTriggerRole.Arn
