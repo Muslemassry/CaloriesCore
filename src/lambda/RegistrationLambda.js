@@ -1,29 +1,104 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, PutCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
-const tableName = 'HistoryIntake-dev';
-exports.handler = async () => {
-    const params = {
-        TableName: tableName
-    };
-    try {
-        console.log('Fetching history items from table:', tableName);
-        const data = await docClient.send(new ScanCommand(params));
-        if (!data.Items || data.Items.length === 0) {
-            throw new Error('Exception: No history items found in the database');
+const tableName = 'UserTable-dev';
+
+const parseRequestBody = (event = {}) => {
+    if (!event.body) {
+        return {};
+    }
+
+    if (typeof event.body === 'string') {
+        try {
+            return JSON.parse(event.body);
+        } catch (error) {
+            console.error('Invalid JSON body:', error);
+            return {};
         }
-        console.log('Successfully fetched', data.Items.length, 'history items');
+    }
+
+    return event.body;
+};
+
+const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+
+exports.handler = async (event = {}) => {
+    const body = parseRequestBody(event);
+    const email = body.email || body.Email;
+    const firstName = body.firstName || body.first_name || body['first name'];
+    const lastName = body.lastName || body.last_name || body['last name'];
+    const age = body.age ?? body.aga;
+    const gender = body.gender || body.Gender;
+
+    if (!email || !firstName || !lastName || age === undefined || !gender) {
         return {
-            statusCode: 200,
-            body: JSON.stringify(data.Items)
+            statusCode: 400,
+            body: JSON.stringify({
+                message: 'Missing required registration fields',
+                received: body
+            })
+        };
+    }
+
+    try {
+        const existingUsersResponse = await docClient.send(new ScanCommand({
+            TableName: tableName,
+            FilterExpression: 'email = :email',
+            ExpressionAttributeValues: {
+                ':email': email
+            }
+        }));
+
+        const existingUser = existingUsersResponse.Items?.[0];
+
+        if (existingUser?.verified === true) {
+            return {
+                statusCode: 409,
+                body: JSON.stringify({
+                    message: 'User is already verified'
+                })
+            };
+        }
+
+        const otp = generateOtp();
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        const params = {
+            TableName: tableName,
+            Item: {
+                email,
+                firstName,
+                lastName,
+                age: Number(age),
+                gender,
+                createdAt: existingUser?.createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                verified: false,
+                otp,
+                otpExpiresAt
+            }
+        };
+
+        await docClient.send(new PutCommand(params));
+
+        return {
+            statusCode: 201,
+            body: JSON.stringify({
+                message: 'OTP generated successfully',
+                user: {
+                    email,
+                    firstName,
+                    lastName,
+                    otp
+                }
+            })
         };
     } catch (error) {
-        console.error('Error fetching history items:', error);
+        console.error('Error registering user:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Error fetching history items', error })
+            body: JSON.stringify({ message: 'Error registering user', error })
         };
     }
 };
