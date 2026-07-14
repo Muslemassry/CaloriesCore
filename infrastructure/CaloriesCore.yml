@@ -137,6 +137,52 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:Scan
                 Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaSESSendEmailPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy3"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  RoleForConfirmRegistrationLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-RegistrationRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
         - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaCognitoPolicy"
           PolicyDocument:
             Version: "2012-10-17"
@@ -146,15 +192,6 @@ Resources:
                   - cognito-idp:AdminGetUser
                   - cognito-idp:ListUsers
                   - cognito-idp:AdminUpdateUserAttributes
-                Resource: "*"
-        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaSESSendEmailPolicy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ses:SendEmail
-                  - ses:SendRawEmail
                 Resource: "*"
         - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy3"
           PolicyDocument:
@@ -328,6 +365,19 @@ Resources:
         S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
+  ConfirmRegistrationLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "ConfirmRegistrationLambdaFunction-${Environment}-${LambdaVersion}"
+      Role: !GetAtt RoleForConfirmRegistrationLambdaFunction.Arn
+      Handler: ConfirmRegistrationLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeS3Key
+      Architectures:
+        - x86_64
   FoodAnalysisLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -431,6 +481,12 @@ Resources:
       ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
       PathPart: "register"
       RestApiId: !Ref CaloriesCoreFunctionsApi
+  ConfirmRegistrationResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "confirm-registration"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
   FoodAnalysisResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -483,6 +539,17 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
+  ConfirmRegistrationPublicMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ConfirmRegistrationResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConfirmRegistrationLambdaFunction.Arn}/invocations
   FoodAnalysisMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -534,6 +601,13 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/registration
+  ConfirmRegistrationLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ConfirmRegistrationLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/confirm-registration
   FoodAnalysisLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -564,6 +638,7 @@ Resources:
       - FoodAnalysisMethod
       - FoodIntakeHistoryMethod
       - RegistrationPublicMethod
+      - ConfirmRegistrationPublicMethod
       - LoginMethod
   Stage:
     Type: AWS::ApiGateway::Stage
