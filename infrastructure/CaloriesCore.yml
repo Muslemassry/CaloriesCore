@@ -159,7 +159,7 @@ Resources:
   RoleForConfirmRegistrationLambdaFunction:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-RegistrationRole"
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-ConfirmRegistrationRole"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
