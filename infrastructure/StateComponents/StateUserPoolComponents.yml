@@ -22,6 +22,16 @@ Resources:
           RequireLowercase: true
           RequireNumbers: true
           RequireSymbols: true
+    # pool application
+  CaloriesUserpoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "CaloriesUserpoolClient-${Environment}"
+      UserPoolId: !Ref Userpool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
 Outputs:
   UserPoolId:
     Description: "The ID of the Cognito User Pool"

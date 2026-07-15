@@ -430,16 +430,6 @@ Resources:
         S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
-  # pool application
-  CaloriesUserpoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      ClientName: !Sub "CaloriesUserpoolClient-${Environment}"
-      UserPoolId: !Ref UserPoolId
-      GenerateSecret: false
-      ExplicitAuthFlows:
-        - ADMIN_NO_SRP_AUTH
-        - USER_PASSWORD_AUTH
   # api gatewayrole for logging
   RoleForApiGatwayToaccessCloudWatch:
     Type: AWS::IAM::Role
