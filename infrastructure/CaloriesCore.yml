@@ -590,7 +590,7 @@ Resources:
       FunctionName: !Ref RegistrationLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/registration"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/register"
   ConfirmRegistrationLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
