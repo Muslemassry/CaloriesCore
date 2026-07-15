@@ -34,6 +34,19 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+  UserIdCounter:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "UserIdCounter-${Environment}"
+      AttributeDefinitions:
+        - AttributeName: counterName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: counterName
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
   DayIntake:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -102,6 +115,9 @@ Outputs:
   UserTable:
     Description: The name of the DynamoDB table
     Value: !Ref UserTable
+  UserIdCounter:
+    Description: The name of the DynamoDB user ID counter table
+    Value: !Ref UserIdCounter
   DayIntake:
     Description: The name of the DynamoDB table
     Value: !Ref DayIntake

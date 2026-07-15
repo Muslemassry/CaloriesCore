@@ -1,9 +1,10 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, PutCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
-const tableName = 'UserTable-dev';
+const tableName = process.env.USER_TABLE_NAME || 'UserTable-dev';
+const counterTableName = process.env.USER_ID_COUNTER_TABLE_NAME || 'UserIdCounter-dev';
 
 const parseRequestBody = (event = {}) => {
     if (!event.body) {
@@ -24,6 +25,24 @@ const parseRequestBody = (event = {}) => {
 
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
+const getNextUserId = async () => {
+    const params = {
+        TableName: counterTableName,
+        Key: { counterName: 'UserTable' },
+        UpdateExpression: 'ADD #v :incr',
+        ExpressionAttributeNames: {
+            '#v': 'currentValue'
+        },
+        ExpressionAttributeValues: {
+            ':incr': 1
+        },
+        ReturnValues: 'UPDATED_NEW'
+    };
+
+    const result = await docClient.send(new UpdateCommand(params));
+    return Number(result.Attributes?.currentValue || 0);
+};
+
 exports.handler = async (event = {}) => {
     const body = parseRequestBody(event);
     const email = body.email || body.Email;
@@ -43,9 +62,10 @@ exports.handler = async (event = {}) => {
     }
 
     try {
-        const existingUsersResponse = await docClient.send(new ScanCommand({
+        const existingUsersResponse = await docClient.send(new QueryCommand({
             TableName: tableName,
-            FilterExpression: 'email = :email',
+            IndexName: 'EmailIndex',
+            KeyConditionExpression: 'email = :email',
             ExpressionAttributeValues: {
                 ':email': email
             }
@@ -64,9 +84,11 @@ exports.handler = async (event = {}) => {
 
         const otp = generateOtp();
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        const userId = existingUser?.userId || await getNextUserId();
         const params = {
             TableName: tableName,
             Item: {
+                userId,
                 email,
                 firstName,
                 lastName,
@@ -87,6 +109,7 @@ exports.handler = async (event = {}) => {
             body: JSON.stringify({
                 message: 'OTP generated successfully',
                 user: {
+                    userId,
                     email,
                     firstName,
                     lastName,
