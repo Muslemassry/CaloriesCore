@@ -6,7 +6,6 @@ Parameters:
   SourceCodeS3Key:
     Type: String
     Description: The key of the S3 object containing the Lambda function code
-    Default: lambda-code
   ZipFileName:
     Type: String
     Description: The name of the zip file containing the Lambda function code
