@@ -45,11 +45,11 @@ const getNextUserId = async () => {
 
 exports.handler = async (event = {}) => {
     const body = parseRequestBody(event);
-    const email = body.email || body.Email;
-    const firstName = body.firstName || body.first_name || body['first name'];
-    const lastName = body.lastName || body.last_name || body['last name'];
-    const age = body.age ?? body.aga;
-    const gender = body.gender || body.Gender;
+    const email = body.email
+    const firstName = body.firstName;
+    const lastName = body.lastName;
+    const age = body.age;
+    const gender = body.gender
 
     if (!email || !firstName || !lastName || age === undefined || !gender) {
         return {
@@ -112,8 +112,7 @@ exports.handler = async (event = {}) => {
                     userId,
                     email,
                     firstName,
-                    lastName,
-                    otp
+                    lastName
                 }
             })
         };

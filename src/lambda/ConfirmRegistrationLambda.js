@@ -1,29 +1,104 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, QueryCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
-const tableName = 'HistoryIntake-dev';
-exports.handler = async () => {
-    const params = {
-        TableName: tableName
-    };
+const tableName = process.env.USER_TABLE_NAME || 'UserTable-dev';
+
+const parseRequestBody = (event = {}) => {
+    if (!event.body) {
+        return {};
+    }
+
+    if (typeof event.body === 'string') {
+        try {
+            return JSON.parse(event.body);
+        } catch (error) {
+            console.error('Invalid JSON body:', error);
+            return {};
+        }
+    }
+
+    return event.body;
+};
+
+exports.handler = async (event = {}) => {
+    const body = parseRequestBody(event);
+    const email = body.email || body.Email;
+    const otp = body.otp || body.OTP || body.Otp;
+
+    if (!email || !otp) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                message: 'Request body must include email and otp',
+                received: body
+            })
+        };
+    }
+
     try {
-        //console.log('Fetching history items from table:', tableName);
-        //const data = await docClient.send(new ScanCommand(params));
-        // if (!data.Items || data.Items.length === 0) {
-        //     throw new Error('Exception: No history items found in the database');
-        // }
-        // console.log('Successfully fetched', data.Items.length, 'history items');
+        const queryResult = await docClient.send(new QueryCommand({
+            TableName: tableName,
+            IndexName: 'EmailIndex',
+            KeyConditionExpression: 'email = :email',
+            ExpressionAttributeValues: {
+                ':email': email
+            }
+        }));
+
+        const user = queryResult.Items?.[0];
+
+        if (!user) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: 'Invalid Credentials' })
+            };
+        }
+
+        if (user.verified) {
+            return {
+                statusCode: 409,
+                body: JSON.stringify({ message: 'Invalid Credentials' })
+            };
+        }
+
+        if (user.otp !== otp) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'Invalid Credentials' })
+            };
+        }
+
+        const now = new Date().toISOString();
+        const otpExpiresAt = user.otpExpiresAt;
+
+        if (otpExpiresAt && now > otpExpiresAt) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'Invalid Credentials' })
+            };
+        }
+
+        await docClient.send(new UpdateCommand({
+            TableName: tableName,
+            Key: { userId: user.userId },
+            UpdateExpression: 'SET verified = :verified, updatedAt = :updatedAt REMOVE otp, otpExpiresAt',
+            ExpressionAttributeValues: {
+                ':verified': true,
+                ':updatedAt': new Date().toISOString()
+            }
+        }));
+
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Confirm registration successful' })
+            body: JSON.stringify({ message: 'User confirmed successfully', email })
         };
     } catch (error) {
-        console.error('Error fetching history items:', error);
+        console.error('Error confirming registration:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Error fetching history items', error })
+            body: JSON.stringify({ message: 'Error confirming registration' })
         };
     }
 };
