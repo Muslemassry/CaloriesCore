@@ -674,3 +674,21 @@ Outputs:
   ApiListEndpoint:
     Description: "API Gateway endpoint BASE URL for the API"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+  LoginEndpoint:
+    Description: "API Gateway endpoint for login"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/login"
+  RegistrationEndpoint:
+    Description: "API Gateway endpoint for registration"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/register"
+  ConfirmRegistrationEndpoint:
+    Description: "API Gateway endpoint for confirm registration"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/confirm-registration"
+  FoodAnalysisEndpoint:
+    Description: "API Gateway endpoint for food analysis"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-analysis"
+  FoodLoggingEndpoint:
+    Description: "API Gateway endpoint for food logging"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-logging"
+  FoodIntakeHistoryEndpoint:
+    Description: "API Gateway endpoint for food intake history"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-intake-history"
