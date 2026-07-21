@@ -77,7 +77,7 @@ exports.handler = async (event = {}) => {
             return {
                 statusCode: 409,
                 body: JSON.stringify({
-                    message: 'User is already verified'
+                    message: 'User is already Registered'
                 })
             };
         }

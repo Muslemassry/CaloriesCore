@@ -1,9 +1,12 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, QueryCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
+const { CognitoIdentityServiceProvider } = require("@aws-sdk/client-cognito-identity-service-provider");
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
+const cognitoClient = new CognitoIdentityServiceProvider({});
 const tableName = process.env.USER_TABLE_NAME || 'UserTable-dev';
+const userPoolId = process.env.USER_POOL_ID;
 
 const parseRequestBody = (event = {}) => {
     if (!event.body) {
@@ -89,6 +92,18 @@ exports.handler = async (event = {}) => {
                 ':updatedAt': new Date().toISOString()
             }
         }));
+
+        // Add user to Cognito User Pool
+        try {
+            await cognitoClient.adminConfirmSignUp({
+                UserPoolId: userPoolId,
+                Username: email
+            });
+            console.log('User confirmed in Cognito User Pool:', email);
+        } catch (cognitoError) {
+            console.error('Error confirming user in Cognito:', cognitoError);
+            // Continue even if Cognito confirmation fails, as user is already verified in DynamoDB
+        }
 
         return {
             statusCode: 200,

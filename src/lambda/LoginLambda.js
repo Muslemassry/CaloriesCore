@@ -1,29 +1,78 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, QueryCommand } = require("@aws-sdk/lib-dynamodb");
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
-const tableName = 'HistoryIntake-dev';
-exports.handler = async () => {
-    const params = {
-        TableName: tableName
-    };
-    try {
-        console.log('Fetching history items from table:', tableName);
-        const data = await docClient.send(new ScanCommand(params));
-        if (!data.Items || data.Items.length === 0) {
-            throw new Error('Exception: No history items found in the database');
+const tableName = 'UserTable-dev';
+
+const parseRequestBody = (event = {}) => {
+    if (!event.body) {
+        return {};
+    }
+
+    if (typeof event.body === 'string') {
+        try {
+            return JSON.parse(event.body);
+        } catch (error) {
+            console.error('Invalid JSON body:', error);
+            return {};
         }
-        console.log('Successfully fetched', data.Items.length, 'history items');
+    }
+
+    return event.body;
+};
+
+exports.handler = async (event = {}) => {
+    const body = parseRequestBody(event);
+    
+    // Extract email from Cognito authenticated user
+    const email = event.requestContext?.authorizer?.claims?.email;
+    
+    if (!email) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ error: 'Unauthorized: No email found in token' })
+        };
+    }
+    
+    console.log('Authenticated user email:', email);
+    
+    try {
+        // Query UserTable by email to get user record and extract user ID
+        const queryParams = {
+            TableName: tableName,
+            IndexName: 'email-index', // Assuming you have a GSI on email
+            KeyConditionExpression: 'email = :email',
+            ExpressionAttributeValues: {
+                ':email': email
+            }
+        };
+        
+        const result = await docClient.send(new QueryCommand(queryParams));
+        
+        if (!result.Items || result.Items.length === 0) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ error: 'User not found' })
+            };
+        }
+        
+        const userRecord = result.Items[0];
+        const userId = userRecord.userId; // Adjust field name based on your schema
+        
+        console.log('User ID:', userId);
+        
+        // Your login logic here
         return {
             statusCode: 200,
-            body: JSON.stringify(data.Items)
+            body: JSON.stringify({ userId, email })
         };
+        
     } catch (error) {
-        console.error('Error fetching history items:', error);
+        console.error('Error querying user table:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Error fetching history items', error })
+            body: JSON.stringify({ error: 'Internal server error' })
         };
     }
 };
