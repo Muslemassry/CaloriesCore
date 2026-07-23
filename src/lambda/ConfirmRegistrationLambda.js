@@ -8,7 +8,7 @@ const {
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 const cognitoClient = new CognitoIdentityProviderClient({});
-const tableName = process.env.USER_TABLE_NAME || 'UserTable-dev';
+const tableName = process.env.USER_TABLE_NAME;
 const userPoolId = process.env.USER_POOL_ID;
 
 const parseRequestBody = (event = {}) => {

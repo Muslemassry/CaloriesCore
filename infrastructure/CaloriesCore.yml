@@ -381,6 +381,10 @@ Resources:
       Handler: ConfirmRegistrationLambda.handler
       Timeout: 5
       Runtime: nodejs20.x
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Sub "UserTable-${Environment}"
+          USER_POOL_ID: !Ref UserPoolId
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
         S3Key: !Ref SourceCodeS3Key
