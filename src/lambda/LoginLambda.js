@@ -43,7 +43,7 @@ exports.handler = async (event = {}) => {
         // Query UserTable by email to get user record and extract user ID
         const queryParams = {
             TableName: tableName,
-            IndexName: 'email-index', // Assuming you have a GSI on email
+            IndexName: 'EmailIndex',
             KeyConditionExpression: 'email = :email',
             ExpressionAttributeValues: {
                 ':email': email
