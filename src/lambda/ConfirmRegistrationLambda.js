@@ -2,14 +2,18 @@ const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, QueryCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
 const {
     CognitoIdentityProviderClient,
-    AdminConfirmSignUpCommand
+    AdminCreateUserCommand,
+    AdminSetUserPasswordCommand
 } = require("@aws-sdk/client-cognito-identity-provider");
+const crypto = require('crypto');
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 const cognitoClient = new CognitoIdentityProviderClient({});
 const tableName = process.env.USER_TABLE_NAME;
 const userPoolId = process.env.USER_POOL_ID;
+
+const generatePassword = () => `Aa1!${crypto.randomBytes(18).toString('base64url')}`;
 
 const parseRequestBody = (event = {}) => {
     if (!event.body) {
@@ -98,14 +102,46 @@ exports.handler = async (event = {}) => {
 
         // Add user to Cognito User Pool
         try {
-            await cognitoClient.send(new AdminConfirmSignUpCommand({
+            const password = generatePassword();
+
+            await cognitoClient.send(new AdminCreateUserCommand({
                 UserPoolId: userPoolId,
-                Username: email
+                Username: email,
+                MessageAction: 'SUPPRESS',
+                UserAttributes: [
+                    {
+                        Name: 'email',
+                        Value: email
+                    },
+                    {
+                        Name: 'email_verified',
+                        Value: 'true'
+                    }
+                ]
             }));
-            console.log('User confirmed in Cognito User Pool:', email);
+
+            await cognitoClient.send(new AdminSetUserPasswordCommand({
+                UserPoolId: userPoolId,
+                Username: email,
+                Password: password,
+                Permanent: true
+            }));
+
+            console.log('User added to Cognito User Pool:', email);
+            return {
+                statusCode: 200,
+                body: JSON.stringify({
+                    message: 'User confirmed successfully',
+                    email,
+                    password
+                })
+            };
         } catch (cognitoError) {
-            console.error('Error confirming user in Cognito:', cognitoError);
-            // Continue even if Cognito confirmation fails, as user is already verified in DynamoDB
+            console.error('Error adding user to Cognito:', cognitoError);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: 'Could not create Cognito user' })
+            };
         }
 
         return {

@@ -193,7 +193,8 @@ Resources:
                   - cognito-idp:AdminGetUser
                   - cognito-idp:ListUsers
                   - cognito-idp:AdminUpdateUserAttributes
-                  - cognito-idp:AdminConfirmSignUp
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminSetUserPassword
                 Resource: "*"
         - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy3"
           PolicyDocument:
