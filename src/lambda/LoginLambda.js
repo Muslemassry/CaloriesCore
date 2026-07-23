@@ -26,7 +26,9 @@ exports.handler = async (event = {}) => {
     const body = parseRequestBody(event);
     
     // Extract email from Cognito authenticated user
-    const email = event.requestContext?.authorizer?.claims?.email;
+    const claims = event.requestContext?.authorizer?.claims ??
+        event.requestContext?.authorizer?.jwt?.claims ?? {};
+    const email = claims['cognito:username'];
     
     if (!email) {
         return {
