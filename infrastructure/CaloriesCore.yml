@@ -193,6 +193,7 @@ Resources:
                   - cognito-idp:AdminGetUser
                   - cognito-idp:ListUsers
                   - cognito-idp:AdminUpdateUserAttributes
+                  - cognito-idp:AdminConfirmSignUp
                 Resource: "*"
         - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy3"
           PolicyDocument:
