@@ -24,8 +24,55 @@ const parseRequestBody = (event = {}) => {
 };
 
 exports.handler = async (event = {}) => {
+
+    const claims = event.requestContext?.authorizer?.claims ??
+        event.requestContext?.authorizer?.jwt?.claims ?? {};
+    const email = claims['cognito:username'];
+    
+    if (!email) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ error: 'Unauthorized: No email found in token' })
+        };
+    }
+    
+    console.log('Authenticated user email:', email);
+    try {
+        // Query UserTable by email to get user record and extract user ID
+        const queryParams = {
+            TableName: tableName,
+            IndexName: 'EmailIndex',
+            KeyConditionExpression: 'email = :email',
+            ExpressionAttributeValues: {
+                ':email': email
+            }
+        };
+        
+        const result = await docClient.send(new QueryCommand(queryParams));
+        
+        if (!result.Items || result.Items.length === 0) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ error: 'User not found' })
+            };
+        }
+        
+        const userRecord = result.Items[0];
+        const userId = userRecord.userId; // Adjust field name based on your schema
+        
+        console.log('User ID:', userId);
+        
+    } catch (error) {
+        console.error('Error querying user table:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Internal server error' })
+        };
+    }
+
+
     const body = parseRequestBody(event);
-    const userID = body.userID;
+    const userID = userId; 
     const carb = body.carb;
     const protein = body.protein;
     const fat = body.fat;
