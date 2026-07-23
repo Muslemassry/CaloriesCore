@@ -8,13 +8,13 @@ phases:
     commands:
       - cd src/lambda
       - npm init -y
-      - npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb
+      - npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb @aws-sdk/client-cognito-identity-provider
       - npm ci
   build:
     commands:
       - echo Build started on `date`
       - export UNIQUE_ZIP="${ZipFileName%.zip}-${CODEBUILD_BUILD_NUMBER}.zip"
-      - zip $UNIQUE_ZIP *.js
+      - zip -r $UNIQUE_ZIP *.js node_modules package.json package-lock.json
       - cd ../../
       - cp src/lambda/$UNIQUE_ZIP .
   post_build:

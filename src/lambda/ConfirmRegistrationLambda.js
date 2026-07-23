@@ -1,10 +1,13 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, QueryCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
-const { CognitoIdentityServiceProvider } = require("@aws-sdk/client-cognito-identity-service-provider");
+const {
+    CognitoIdentityProviderClient,
+    AdminConfirmSignUpCommand
+} = require("@aws-sdk/client-cognito-identity-provider");
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
-const cognitoClient = new CognitoIdentityServiceProvider({});
+const cognitoClient = new CognitoIdentityProviderClient({});
 const tableName = process.env.USER_TABLE_NAME || 'UserTable-dev';
 const userPoolId = process.env.USER_POOL_ID;
 
@@ -95,10 +98,10 @@ exports.handler = async (event = {}) => {
 
         // Add user to Cognito User Pool
         try {
-            await cognitoClient.adminConfirmSignUp({
+            await cognitoClient.send(new AdminConfirmSignUpCommand({
                 UserPoolId: userPoolId,
                 Username: email
-            });
+            }));
             console.log('User confirmed in Cognito User Pool:', email);
         } catch (cognitoError) {
             console.error('Error confirming user in Cognito:', cognitoError);
