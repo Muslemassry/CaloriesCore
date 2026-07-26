@@ -29,7 +29,7 @@ exports.handler = async (event = {}) => {
     const claims = event.requestContext?.authorizer?.claims ??
         event.requestContext?.authorizer?.jwt?.claims ?? {};
     const email = claims['cognito:username'];
-    const userId = claims['custom:userId'];
+    const userId = claims['custom:user_id'];
     
     if (!email || !userId) {
         return {

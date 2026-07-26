@@ -16,7 +16,7 @@ Resources:
       AutoVerifiedAttributes:
         - email
       Schema:
-        - Name: custom:userId
+        - Name: custom:user_id
           AttributeDataType: String
           Mutable: true
           Required: false
@@ -34,10 +34,6 @@ Resources:
       ClientName: !Sub "CaloriesUserpoolClient-${Environment}"
       UserPoolId: !Ref Userpool
       GenerateSecret: false
-      ReadAttributes:
-        - email
-        - email_verified
-        - custom:userId
       ExplicitAuthFlows:
         - ADMIN_NO_SRP_AUTH
         - USER_PASSWORD_AUTH

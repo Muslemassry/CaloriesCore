@@ -118,7 +118,7 @@ exports.handler = async (event = {}) => {
                         Value: 'true'
                     },
                     {
-                        Name: 'custom:userId',
+                        Name: 'custom:user_id',
                         Value: String(user.userId)
                     }
                 ]
