@@ -110,14 +110,6 @@ exports.handler = async (event = {}) => {
                 MessageAction: 'SUPPRESS',
                 UserAttributes: [
                     {
-                        Name: 'email',
-                        Value: email
-                    },
-                    {
-                        Name: 'email_verified',
-                        Value: 'true'
-                    },
-                    {
                         Name: 'custom:user_id',
                         Value: String(user.userId)
                     }
