@@ -24,65 +24,25 @@ const parseRequestBody = (event = {}) => {
 };
 
 exports.handler = async (event = {}) => {
-
     const claims = event.requestContext?.authorizer?.claims ??
         event.requestContext?.authorizer?.jwt?.claims ?? {};
     const email = claims['cognito:username'];
-    
-    if (!email) {
-        return {
-            statusCode: 401,
-            body: JSON.stringify({ error: 'Unauthorized: No email found in token' })
-        };
-    }
+    const userId = claims['custom:user_id'];
     
     console.log('Authenticated user email:', email);
-    try {
-        // Query UserTable by email to get user record and extract user ID
-        const queryParams = {
-            TableName: tableName,
-            IndexName: 'EmailIndex',
-            KeyConditionExpression: 'email = :email',
-            ExpressionAttributeValues: {
-                ':email': email
-            }
-        };
-        
-        const result = await docClient.send(new QueryCommand(queryParams));
-        
-        if (!result.Items || result.Items.length === 0) {
-            return {
-                statusCode: 404,
-                body: JSON.stringify({ error: 'User not found' })
-            };
-        }
-        
-        const userRecord = result.Items[0];
-        const userId = userRecord.userId; // Adjust field name based on your schema
-        
-        console.log('User ID:', userId);
-        
-    } catch (error) {
-        console.error('Error querying user table:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error' })
-        };
-    }
-
-
+    console.log('Authenticated user ID:', userId);
+    
     const body = parseRequestBody(event);
-    const userID = userId; 
     const carb = body.carb;
     const protein = body.protein;
     const fat = body.fat;
     const calories = body.calories;
 
-    if (!userID || carb == null || protein == null || fat == null || calories == null) {
+    if (carb == null || protein == null || fat == null || calories == null) {
         return {
             statusCode: 400,
             body: JSON.stringify({
-                message: 'Request body must include userID, carb, protein, fat, and calories',
+                message: 'Request body must include carb, protein, fat, and calories',
                 received: body
             })
         };
@@ -91,7 +51,7 @@ exports.handler = async (event = {}) => {
     const now = new Date();
     const date = now.toISOString().split('T')[0];
     const mealLogItem = {
-        userId: Number(userID),
+        userId: Number(userId),
         date,
         carb: Number(carb),
         protein: Number(protein),

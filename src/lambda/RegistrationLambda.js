@@ -107,13 +107,7 @@ exports.handler = async (event = {}) => {
         return {
             statusCode: 201,
             body: JSON.stringify({
-                message: 'OTP generated successfully',
-                user: {
-                    userId,
-                    email,
-                    firstName,
-                    lastName
-                }
+                message: 'OTP generated successfully'
             })
         };
     } catch (error) {
