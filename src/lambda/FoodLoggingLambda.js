@@ -71,7 +71,7 @@ exports.handler = async (event = {}) => {
     const now = new Date();
     const date = now.toISOString().split('T')[0];
     const mealLogItem = {
-        logId: Number(logId),
+        mealLogId: Number(logId),
         userId: Number(userId),
         date,
         carb: Number(carb),
