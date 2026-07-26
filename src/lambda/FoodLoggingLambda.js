@@ -50,9 +50,11 @@ exports.handler = async (event = {}) => {
 
     const now = new Date();
     const date = now.toISOString().split('T')[0];
+    const logId = `${userId}-${now.toISOString()}`;
     const mealLogItem = {
         userId: Number(userId),
         date,
+        logId,
         carb: Number(carb),
         protein: Number(protein),
         fat: Number(fat),
