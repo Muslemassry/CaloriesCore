@@ -3,7 +3,8 @@ const { DynamoDBDocumentClient, QueryCommand, UpdateCommand } = require("@aws-sd
 const {
     CognitoIdentityProviderClient,
     AdminCreateUserCommand,
-    AdminSetUserPasswordCommand
+    AdminSetUserPasswordCommand,
+    AdminUpdateUserAttributesCommand
 } = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require('crypto');
 
@@ -110,8 +111,12 @@ exports.handler = async (event = {}) => {
                 MessageAction: 'SUPPRESS',
                 UserAttributes: [
                     {
-                        Name: 'custom:user_id',
-                        Value: String(user.userId)
+                        Name: 'email',
+                        Value: email
+                    },
+                    {
+                        Name: 'email_verified',
+                        Value: 'true'
                     }
                 ]
             }));
@@ -121,6 +126,17 @@ exports.handler = async (event = {}) => {
                 Username: email,
                 Password: password,
                 Permanent: true
+            }));
+
+            await cognitoClient.send(new AdminUpdateUserAttributesCommand({
+                UserPoolId: userPoolId,
+                Username: email,
+                UserAttributes: [
+                    {
+                        Name: 'custom:user_id',
+                        Value: String(user.userId)
+                    }
+                ]
             }));
 
             console.log('User added to Cognito User Pool:', email);
