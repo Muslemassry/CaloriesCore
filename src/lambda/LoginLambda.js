@@ -29,52 +29,19 @@ exports.handler = async (event = {}) => {
     const claims = event.requestContext?.authorizer?.claims ??
         event.requestContext?.authorizer?.jwt?.claims ?? {};
     const email = claims['cognito:username'];
+    const userId = claims['custom:userId'];
     
-    if (!email) {
+    if (!email || !userId) {
         return {
             statusCode: 401,
-            body: JSON.stringify({ error: 'Unauthorized: No email found in token' })
+            body: JSON.stringify({ error: 'Unauthorized: No email or user ID found in token' })
         };
     }
     
     console.log('Authenticated user email:', email);
-    
-    try {
-        // Query UserTable by email to get user record and extract user ID
-        const queryParams = {
-            TableName: tableName,
-            IndexName: 'EmailIndex',
-            KeyConditionExpression: 'email = :email',
-            ExpressionAttributeValues: {
-                ':email': email
-            }
-        };
-        
-        const result = await docClient.send(new QueryCommand(queryParams));
-        
-        if (!result.Items || result.Items.length === 0) {
-            return {
-                statusCode: 404,
-                body: JSON.stringify({ error: 'User not found' })
-            };
-        }
-        
-        const userRecord = result.Items[0];
-        const userId = userRecord.userId; // Adjust field name based on your schema
-        
-        console.log('User ID:', userId);
-        
-        // Your login logic here
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ userId, email })
-        };
-        
-    } catch (error) {
-        console.error('Error querying user table:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error' })
-        };
-    }
+    console.log('Authenticated user ID:', userId);
+    return {
+        statusCode: 200,
+        body: JSON.stringify({ userId, email })
+    };
 };

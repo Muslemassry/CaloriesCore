@@ -15,6 +15,11 @@ Resources:
       UserPoolName: !Sub "UserPool-${Environment}"
       AutoVerifiedAttributes:
         - email
+      Schema:
+        - Name: custom:userId
+          AttributeDataType: String
+          Mutable: true
+          Required: false
       Policies:
         PasswordPolicy:
           MinimumLength: 8
@@ -29,6 +34,10 @@ Resources:
       ClientName: !Sub "CaloriesUserpoolClient-${Environment}"
       UserPoolId: !Ref Userpool
       GenerateSecret: false
+      ReadAttributes:
+        - email
+        - email_verified
+        - custom:userId
       ExplicitAuthFlows:
         - ADMIN_NO_SRP_AUTH
         - USER_PASSWORD_AUTH

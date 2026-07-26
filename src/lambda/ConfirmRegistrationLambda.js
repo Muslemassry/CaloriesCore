@@ -116,6 +116,10 @@ exports.handler = async (event = {}) => {
                     {
                         Name: 'email_verified',
                         Value: 'true'
+                    },
+                    {
+                        Name: 'custom:userId',
+                        Value: String(user.userId)
                     }
                 ]
             }));
