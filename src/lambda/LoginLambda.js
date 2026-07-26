@@ -33,7 +33,7 @@ exports.handler = async (event = {}) => {
     try {
         const queryParams = {
             TableName: tableName,
-            IndexName: 'email-index',
+            IndexName: 'EmailIndex',
             KeyConditionExpression: 'email = :email',
             ExpressionAttributeValues: {
                 ':email': email
