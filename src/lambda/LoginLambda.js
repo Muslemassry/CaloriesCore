@@ -31,6 +31,32 @@ exports.handler = async (event = {}) => {
     const userId = claims['custom:user_id'];
     
     if (!email || !userId) {
+        try {
+            const queryParams = {
+                TableName: tableName,
+                IndexName: 'email-index',
+                KeyConditionExpression: 'email = :email',
+                ExpressionAttributeValues: {
+                    ':email': email
+                }
+            };
+
+            const result = await docClient.send(new QueryCommand(queryParams));
+
+            if (!result.Items || result.Items.length === 0) {
+                return {
+                    statusCode: 404,
+                    body: JSON.stringify({ error: 'User not found' })
+                };
+            }
+        } catch (error) {
+            console.error('Error querying user table:', error);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: 'Internal server error' })
+            };
+        }
+
         return {
             statusCode: 401,
             body: JSON.stringify({ error: 'Unauthorized: No email or user ID found in token' })

@@ -82,15 +82,23 @@ Resources:
     Properties:
       TableName: !Sub "MealLog-${Environment}"
       AttributeDefinitions:
+        - AttributeName: mealLogId
+          AttributeType: N
         - AttributeName: userId
           AttributeType: N
-        - AttributeName: date
-          AttributeType: S
       KeySchema:
-        - AttributeName: userId
+        - AttributeName: mealLogId
           KeyType: HASH
-        - AttributeName: date
-          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: UserAttributeIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5

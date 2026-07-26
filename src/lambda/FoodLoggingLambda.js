@@ -5,6 +5,7 @@ const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 const mealLogTableName = 'MealLog-dev';
 const dayIntakeTableName = 'DayIntake-dev';
+const counterTableName = process.env.USER_ID_COUNTER_TABLE_NAME || 'UserIdCounter-dev';
 
 const parseRequestBody = (event = {}) => {
     if (!event.body) {
@@ -21,6 +22,24 @@ const parseRequestBody = (event = {}) => {
     }
 
     return event.body;
+};
+
+const getNextUserId = async () => {
+    const params = {
+        TableName: counterTableName,
+        Key: { counterName: 'MealLogTable' },
+        UpdateExpression: 'ADD #v :incr',
+        ExpressionAttributeNames: {
+            '#v': 'currentValue'
+        },
+        ExpressionAttributeValues: {
+            ':incr': 1
+        },
+        ReturnValues: 'UPDATED_NEW'
+    };
+
+    const result = await docClient.send(new UpdateCommand(params));
+    return Number(result.Attributes?.currentValue || 0);
 };
 
 exports.handler = async (event = {}) => {
@@ -48,13 +67,13 @@ exports.handler = async (event = {}) => {
         };
     }
 
+    const logId = await getNextUserId();
     const now = new Date();
     const date = now.toISOString().split('T')[0];
-    const logId = `${userId}-${now.toISOString()}`;
     const mealLogItem = {
+        logId: Number(logId),
         userId: Number(userId),
         date,
-        logId,
         carb: Number(carb),
         protein: Number(protein),
         fat: Number(fat),
