@@ -69,7 +69,8 @@ exports.handler = async (event = {}) => {
         const updateParams = {
             TableName: dayIntakeTableName,
             Key: {
-                userId: Number(userId)
+                userId: Number(userId),
+                date
             },
             UpdateExpression: 'SET carb = if_not_exists(carb, :zero) + :carb, protein = if_not_exists(protein, :zero) + :protein, fat = if_not_exists(fat, :zero) + :fat, calories = if_not_exists(calories, :zero) + :calories, updatedAt = :updatedAt',
             ExpressionAttributeValues: {
