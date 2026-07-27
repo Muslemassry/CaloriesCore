@@ -660,6 +660,33 @@ Resources:
           LoggingLevel: INFO
           DataTraceEnabled: true
           MetricsEnabled: true
+  S3EventDebugLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/events/${SourceCodeBucketName}-debug-logs"
+      RetentionInDays: 7
+  EventBridgeToCloudWatchLogsPolicy:
+    Type: AWS::Logs::ResourcePolicy
+    Properties:
+      PolicyName: EventBridgeToCloudWatchLogsPolicy
+      PolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowEventBridgeToCreateLogStreamsAndPutLogs",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com"
+              },
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "${S3EventDebugLogGroup.Arn}:*"
+            }
+          ]
+        }
   EventBridgeRuleForFoodAnalysisTriggeredLambdaFunction:
     Type: AWS::Events::Rule
     Properties:
@@ -676,7 +703,9 @@ Resources:
               - !Ref UploadingBucketName
       Targets:
         - Arn: !GetAtt FoodAnalysisTriggeredLambdaFunction.Arn
-          Id: "FoodAnalysisTriggeredLambdaFunctionTarget"
+          Id: FoodAnalysisTriggeredLambdaFunctionTarget
+        - Arn: !GetAtt S3EventDebugLogGroup.Arn
+          Id: TargetCloudWatchLogGroup
   AllowEventBridgeToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
