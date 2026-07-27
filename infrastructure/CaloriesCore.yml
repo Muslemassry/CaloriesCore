@@ -715,7 +715,7 @@ Resources:
       Action: 'lambda:InvokeFunction'
       FunctionName: !GetAtt FoodAnalysisTriggeredLambdaFunction.Arn
       Principal: 'events.amazonaws.com'
-      SourceArn: !Sub "arn:aws:s3:::${UploadingBucketName}"
+      SourceArn: !GetAtt EventBridgeRuleForFoodAnalysisTriggeredLambdaFunction.Arn
 Outputs:
   ApiListEndpoint:
     Description: "API Gateway endpoint BASE URL for the API"
