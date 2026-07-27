@@ -701,6 +701,9 @@ Resources:
           bucket:
             name:
               - !Ref UploadingBucketName
+          object:
+            key:
+              - prefix: uploads/
       Targets:
         - Arn: !GetAtt FoodAnalysisTriggeredLambdaFunction.Arn
           Id: FoodAnalysisTriggeredLambdaFunctionTarget
