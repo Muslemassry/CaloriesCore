@@ -37,7 +37,7 @@ exports.handler = async (event = {}) => {
     const contentType = body.contentType || 'application/octet-stream';
     const safeEmail = email.replace(/[^a-zA-Z0-9._-]/g, '-');
     const safeImageName = (imageName || 'image').replace(/[^a-zA-Z0-9._-]/g, '-');
-    const imageId = `${userId}-${safeEmail}-${safeImageName}-${Date.now()}`;
+    const imageId = `${userId}-${safeEmail}-${Date.now()}-${safeImageName}`;
     const objectKey = `uploads/${imageId}`;
 
     const putObjectCommand = new PutObjectCommand({
