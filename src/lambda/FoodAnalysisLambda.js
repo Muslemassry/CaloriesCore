@@ -7,7 +7,7 @@ const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 const s3Client = new S3Client({});
 const tableName = process.env.Food_Analysis_Request_Table_Name;
-const bucketName = process.env.UploadingBucketName;
+const bucketName = process.env.Uploading_Bucket_Name;
 
 const parseRequestBody = (event = {}) => {
     if (!event.body) {
@@ -38,7 +38,7 @@ exports.handler = async (event = {}) => {
     const safeEmail = email.replace(/[^a-zA-Z0-9._-]/g, '-');
     const safeImageName = (imageName || 'image').replace(/[^a-zA-Z0-9._-]/g, '-');
     const imageId = `${userId}-${safeEmail}-${safeImageName}-${Date.now()}`;
-    const objectKey = `${imageId}/${safeImageName}`;
+    const objectKey = `uploads/${imageId}`;
 
     const putObjectCommand = new PutObjectCommand({
         Bucket: bucketName,
