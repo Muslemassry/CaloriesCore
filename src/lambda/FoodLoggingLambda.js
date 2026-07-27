@@ -80,6 +80,7 @@ exports.handler = async (event = {}) => {
         calories: Number(calories),
         createdAt: now.toISOString()
     };
+    
 
     try {
         await docClient.send(new PutCommand({
