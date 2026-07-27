@@ -1,29 +1,68 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
-const tableName = 'HistoryIntake-dev';
-exports.handler = async () => {
-    const params = {
-        TableName: tableName
-    };
-    try {
-        console.log('Fetching history items from table:', tableName);
-        const data = await docClient.send(new ScanCommand(params));
-        if (!data.Items || data.Items.length === 0) {
-            throw new Error('Exception: No history items found in the database');
-        }
-        console.log('Successfully fetched', data.Items.length, 'history items');
-        return {
-            statusCode: 200,
-            body: JSON.stringify(data.Items)
-        };
-    } catch (error) {
-        console.error('Error fetching history items:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Error fetching history items', error })
-        };
+const s3Client = new S3Client({});
+const tableName = process.env.Food_Analysis_Request_Table_Name;
+const bucketName = process.env.UploadingBucketName;
+
+const parseRequestBody = (event = {}) => {
+    if (!event.body) {
+        return {};
     }
+
+    if (typeof event.body === 'string') {
+        try {
+            return JSON.parse(event.body);
+        } catch (error) {
+            console.error('Invalid JSON body:', error);
+            return {};
+        }
+    }
+
+    return event.body;
+};
+
+exports.handler = async (event = {}) => {
+    const claims = event.requestContext?.authorizer?.claims ??
+        event.requestContext?.authorizer?.jwt?.claims ?? {};
+    const email = claims['cognito:username'];
+    const userId = claims['custom:user_id'];
+
+    const body = parseRequestBody(event);
+    const imageName = body.name;
+    const contentType = body.contentType || 'application/octet-stream';
+    const safeEmail = email.replace(/[^a-zA-Z0-9._-]/g, '-');
+    const safeImageName = (imageName || 'image').replace(/[^a-zA-Z0-9._-]/g, '-');
+    const imageId = `${userId}-${safeEmail}-${safeImageName}-${Date.now()}`;
+    const objectKey = `${imageId}/${safeImageName}`;
+
+    const putObjectCommand = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: objectKey,
+        ContentType: contentType,
+        Metadata: {
+            userId: userId,
+            email: email,
+            imageId
+        }
+    });
+
+    const presignedUrl = await getSignedUrl(s3Client, putObjectCommand, { expiresIn: 3600 });
+
+    console.log('Generated imageId:', imageId);
+    console.log('Generated presignedUrl:', presignedUrl);
+
+    return {
+        statusCode: 200,
+        body: JSON.stringify({
+            imageId,
+            objectKey,
+            presignedUrl
+        })
+    };
+
 };

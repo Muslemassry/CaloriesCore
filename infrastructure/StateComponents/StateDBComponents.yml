@@ -116,6 +116,16 @@ Resources:
           KeyType: HASH
         - AttributeName: requestId
           KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: RequestIdAttributeIndex
+          KeySchema:
+            - AttributeName: requestId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5

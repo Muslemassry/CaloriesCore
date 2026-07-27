@@ -400,6 +400,10 @@ Resources:
       Handler: FoodAnalysisLambda.handler
       Timeout: 5
       Runtime: nodejs20.x
+      Environment:
+        Variables:
+          Food_Analysis_Request_Table_Name: !Sub "MealAnalysisRequest-${Environment}"
+          Uploading_Bucket_Name: !Ref UploadingBucketName
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
         S3Key: !Ref SourceCodeS3Key
