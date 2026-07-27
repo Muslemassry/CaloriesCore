@@ -107,19 +107,19 @@ Resources:
     Properties:
       TableName: !Sub "MealAnalysisRequest-${Environment}"
       AttributeDefinitions:
-        - AttributeName: userId
-          AttributeType: N
         - AttributeName: requestId
           AttributeType: S
-      KeySchema:
         - AttributeName: userId
-          KeyType: HASH
+          AttributeType: N
+      KeySchema:
         - AttributeName: requestId
+          KeyType: HASH
+        - AttributeName: userId
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: RequestIdAttributeIndex
+        - IndexName: UserIdAttributeIndex
           KeySchema:
-            - AttributeName: requestId
+            - AttributeName: userId
               KeyType: HASH
           Projection:
             ProjectionType: ALL

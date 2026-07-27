@@ -1,5 +1,5 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, PutCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
@@ -53,6 +53,21 @@ exports.handler = async (event = {}) => {
 
     const presignedUrl = await getSignedUrl(s3Client, putObjectCommand, { expiresIn: 3600 });
 
+    const requestItem = {
+        requestId: imageId,
+        userId: Number(userId),
+        status: 'init',
+        bucket: bucketName,
+        key: objectKey,
+        contentType,
+        createdAt: new Date().toISOString()
+    };
+
+    await docClient.send(new PutCommand({
+        TableName: tableName,
+        Item: requestItem
+    }));
+
     console.log('Generated imageId:', imageId);
     console.log('Generated presignedUrl:', presignedUrl);
 
@@ -64,5 +79,4 @@ exports.handler = async (event = {}) => {
             presignedUrl
         })
     };
-
 };
