@@ -306,7 +306,14 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: "arn:aws:logs:*:*:*"
-  # role for lambda functions to access s3 bucket
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-BedrockInvokePermissions"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: 'arn:aws:bedrock:*::foundation-model/*'
   RoleForLmbdaToAccessS3:
     Type: AWS::IAM::Role
     Properties:
