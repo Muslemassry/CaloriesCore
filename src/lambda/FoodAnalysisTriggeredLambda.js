@@ -1,7 +1,11 @@
 const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
 
 const s3Client = new S3Client({});
-const tableName = "HistoryIntake-dev";
+const dynamoClient = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
+const tableName = process.env.Food_Analysis_Request_Table_Name;
 
 const getImageBuffer = async (bucketName, objectKey) => {
     const getObjectCommand = new GetObjectCommand({
@@ -44,6 +48,21 @@ exports.handler = async (event = {}) => {
             }),
         };
     }
+
+    await docClient.send(new UpdateCommand({
+        TableName: tableName,
+        Key: {
+            requestId: fileName,
+        },
+        UpdateExpression: "SET #status = :status",
+        ExpressionAttributeNames: {
+            "#status": "status"
+        },
+        ExpressionAttributeValues: {
+            ":status": "in_progress"
+        },
+        ReturnValues: "UPDATED_NEW"
+    }));
 
     const imageBuffer = await getImageBuffer(bucketName, objectKey);
     const imageBase64 = imageBuffer.toString("base64");
