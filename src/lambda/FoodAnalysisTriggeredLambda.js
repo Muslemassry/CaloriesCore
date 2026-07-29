@@ -187,7 +187,12 @@ exports.handler = async (event = {}) => {
 
         console.log("Invoking Bedrock");
         const bedrockResponse = await invokeBedrockModel(prompt, imageBase64);
-        console.log("Bedrock response:", bedrockResponse);
+        const cleanedBedrockResponse = (bedrockResponse || "")
+            .replace(/^```json\s*/i, "")
+            .replace(/^```\s*/i, "")
+            .replace(/```$/i, "")
+            .trim();
+        console.log("Bedrock response:", cleanedBedrockResponse);
 
         await docClient.send(new UpdateCommand({
             TableName: tableName,
@@ -202,7 +207,7 @@ exports.handler = async (event = {}) => {
             },
             ExpressionAttributeValues: {
                 ":status": "PROCESSED",
-                ":mealAnalysis": bedrockResponse
+                ":mealAnalysis": cleanedBedrockResponse
             },
             ReturnValues: "UPDATED_NEW"
         }));
@@ -214,7 +219,7 @@ exports.handler = async (event = {}) => {
             fileName,
             contentType: "image/jpeg",
             imageSize: imageBuffer.length,
-            bedrockResponse,
+            bedrockResponse: cleanedBedrockResponse,
             tableName,
         };
     } catch (error) {
