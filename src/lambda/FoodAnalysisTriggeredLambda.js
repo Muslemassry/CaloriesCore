@@ -71,7 +71,6 @@ const invokeBedrockModel = async (prompt, imageBase64) => {
     });
 
     const response = await bedrockClient.send(command);
-    console.log(response);
     const responseBody = JSON.parse(new TextDecoder().decode(response.body));
 
     return responseBody.content?.[0]?.text || JSON.stringify(responseBody);
@@ -189,6 +188,25 @@ exports.handler = async (event = {}) => {
         console.log("Invoking Bedrock");
         const bedrockResponse = await invokeBedrockModel(prompt, imageBase64);
         console.log("Bedrock response:", bedrockResponse);
+
+        await docClient.send(new UpdateCommand({
+            TableName: tableName,
+            Key: {
+                requestId: fileName,
+                userId,
+            },
+            UpdateExpression: "SET #status = :status, #mealAnalysis = :mealAnalysis",
+            ExpressionAttributeNames: {
+                "#status": "status",
+                "#mealAnalysis": "meal_analysis"
+            },
+            ExpressionAttributeValues: {
+                ":status": "PROCESSED",
+                ":mealAnalysis": bedrockResponse
+            },
+            ReturnValues: "UPDATED_NEW"
+        }));
+        console.log("Request status updated to PROCESSED with meal analysis");
 
         return {
             bucketName,
