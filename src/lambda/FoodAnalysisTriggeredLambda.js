@@ -1,6 +1,6 @@
 const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, GetCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
 
 const { RekognitionClient, DetectLabelsCommand } = require("@aws-sdk/client-rekognition");
 const { BedrockRuntimeClient, InvokeModelCommand } = require("@aws-sdk/client-bedrock-runtime");
@@ -36,6 +36,22 @@ const getImageBuffer = async (bucketName, objectKey) => {
 const getUserIdFromRequestId = (requestId) => {
     const match = requestId?.match(/^(\d+)-/);
     return match ? Number(match[1]) : null;
+};
+
+const getRequestStatus = async (requestId, userId) => {
+    if (!tableName || !requestId || userId === null || userId === undefined) {
+        return null;
+    }
+
+    const result = await docClient.send(new GetCommand({
+        TableName: tableName,
+        Key: {
+            requestId,
+            userId,
+        },
+    }));
+
+    return result.Item?.status ?? null;
 };
 
 const invokeBedrockModel = async (prompt, imageBase64) => {
@@ -105,6 +121,19 @@ exports.handler = async (event = {}) => {
 
         const userId = getUserIdFromRequestId(fileName);
         console.log("Resolved request metadata:", { fileName, userId, tableName });
+
+        const currentStatus = await getRequestStatus(fileName, userId);
+        console.log("Current request status:", currentStatus);
+
+        if (currentStatus !== "INIT") {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    message: "Invalid request",
+                    requestId: fileName
+                }),
+            };
+        }
 
         console.log("Updating request status to IN_PROGRESS");
         await docClient.send(new UpdateCommand({
