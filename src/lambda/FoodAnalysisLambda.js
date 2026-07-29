@@ -56,7 +56,7 @@ exports.handler = async (event = {}) => {
     const requestItem = {
         requestId: imageId,
         userId: Number(userId),
-        status: 'init',
+        status: 'INIT',
         bucket: bucketName,
         key: objectKey,
         contentType,

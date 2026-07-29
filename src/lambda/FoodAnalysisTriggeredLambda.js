@@ -122,7 +122,7 @@ exports.handler = async (event = {}) => {
             },
             ReturnValues: "UPDATED_NEW"
         }));
-        console.log("Request status updated successfully");
+        console.log("Request status updated IN_PROGRESS successfully");
 
         const imageBuffer = await getImageBuffer(bucketName, objectKey);
         console.log("Image downloaded successfully", { size: imageBuffer.length });
@@ -150,6 +150,24 @@ exports.handler = async (event = {}) => {
         console.log("Food detection result:", { containsFood, detectedLabels });
 
         if (!containsFood) {
+            console.log("Updating request status to be NOT_APPLICABLE");
+            await docClient.send(new UpdateCommand({
+                TableName: tableName,
+                Key: {
+                    requestId: fileName,
+                    userId,
+                },
+                UpdateExpression: "SET #status = :status",
+                ExpressionAttributeNames: {
+                    "#status": "status"
+                },
+                ExpressionAttributeValues: {
+                    ":status": "NOT_APPLICABLE"
+                },
+                ReturnValues: "UPDATED_NEW"
+            }));
+            console.log("Request status updated NOT_APPLICABLE successfully");
+            
             return {
                 statusCode: 400,
                 body: JSON.stringify({
