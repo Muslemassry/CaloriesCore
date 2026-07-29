@@ -76,56 +76,6 @@ const invokeBedrockModel = async (prompt, imageBase64) => {
     return responseBody.content?.[0]?.text || JSON.stringify(responseBody);
 };
 
-const normalizeDynamoDbValue = (value) => {
-    if (value === null || value === undefined) {
-        return null;
-    }
-
-    if (Array.isArray(value)) {
-        return value.map(normalizeDynamoDbValue);
-    }
-
-    if (typeof value !== "object") {
-        return value;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(value, "S")) {
-        return value.S;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(value, "N")) {
-        return Number(value.N);
-    }
-
-    if (Object.prototype.hasOwnProperty.call(value, "BOOL")) {
-        return value.BOOL;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(value, "NULL") && value.NULL) {
-        return null;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(value, "L")) {
-        return value.L.map(normalizeDynamoDbValue);
-    }
-
-    if (Object.prototype.hasOwnProperty.call(value, "M")) {
-        return Object.fromEntries(
-            Object.entries(value.M).map(([key, nestedValue]) => [key, normalizeDynamoDbValue(nestedValue)])
-        );
-    }
-
-    if (Object.prototype.hasOwnProperty.call(value, "SS")) {
-        return value.SS;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(value, "NS")) {
-        return value.NS.map(Number);
-    }
-
-    return value;
-};
-
 exports.handler = async (event = {}) => {
     try {
         const bucketName = event?.detail?.bucket?.name
@@ -236,31 +186,8 @@ exports.handler = async (event = {}) => {
         `;
 
         console.log("Invoking Bedrock");
-        const bedrockResponseText = await invokeBedrockModel(prompt, imageBase64);
-        console.log("Bedrock response:", bedrockResponseText);
-
-        let parsedMealAnalysis = null;
-        try {
-            let cleanedText = (bedrockResponseText || "").trim();
-
-            const fencedMatch = cleanedText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-            if (fencedMatch && fencedMatch[1]) {
-                cleanedText = fencedMatch[1].trim();
-            } else if (cleanedText.startsWith("```")) {
-                cleanedText = cleanedText.replace(/^```[a-zA-Z]*\s*/i, "").replace(/\s*```$/i, "");
-            }
-
-            const jsonObjectMatch = cleanedText.match(/\{[\s\S]*\}/);
-            if (jsonObjectMatch) {
-                cleanedText = jsonObjectMatch[0];
-            }
-
-            const parsedRawMealAnalysis = JSON.parse(cleanedText.trim());
-            parsedMealAnalysis = normalizeDynamoDbValue(parsedRawMealAnalysis);
-        } catch (parseError) {
-            console.warn("Bedrock response was not valid JSON. Storing as string.", parseError);
-            parsedMealAnalysis = bedrockResponseText;
-        }
+        const bedrockResponse = await invokeBedrockModel(prompt, imageBase64);
+        console.log("Bedrock response:", bedrockResponse);
 
         await docClient.send(new UpdateCommand({
             TableName: tableName,
@@ -275,7 +202,7 @@ exports.handler = async (event = {}) => {
             },
             ExpressionAttributeValues: {
                 ":status": "PROCESSED",
-                ":mealAnalysis": parsedMealAnalysis
+                ":mealAnalysis": bedrockResponse
             },
             ReturnValues: "UPDATED_NEW"
         }));
@@ -287,7 +214,7 @@ exports.handler = async (event = {}) => {
             fileName,
             contentType: "image/jpeg",
             imageSize: imageBuffer.length,
-            bedrockResponse: parsedMealAnalysis,
+            bedrockResponse,
             tableName,
         };
     } catch (error) {
