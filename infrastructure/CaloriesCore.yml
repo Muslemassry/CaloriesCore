@@ -430,7 +430,8 @@ Resources:
       FunctionName: !Sub "FoodAnalysisTriggeredLambdaFunction-${Environment}-${LambdaVersion}"
       Role: !GetAtt RoleForFoodAnalysisTriggeredLambdaFunction.Arn
       Handler: FoodAnalysisTriggeredLambda.handler
-      Timeout: 5
+      Timeout: 60
+      MemorySize: 512
       Runtime: nodejs20.x
       Environment:
         Variables:
