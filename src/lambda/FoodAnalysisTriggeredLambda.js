@@ -23,6 +23,11 @@ const getImageBuffer = async (bucketName, objectKey) => {
     return Buffer.from(imageBuffer);
 };
 
+const getUserIdFromRequestId = (requestId) => {
+    const match = requestId?.match(/^(\d+)-/);
+    return match ? Number(match[1]) : null;
+};
+
 exports.handler = async (event = {}) => {
     const bucketName = event?.detail?.bucket?.name
         ?? event?.Records?.[0]?.s3?.bucket?.name
@@ -49,23 +54,50 @@ exports.handler = async (event = {}) => {
         };
     }
 
+    const userId = getUserIdFromRequestId(fileName);
+
     await docClient.send(new UpdateCommand({
         TableName: tableName,
         Key: {
             requestId: fileName,
+            userId,
         },
         UpdateExpression: "SET #status = :status",
         ExpressionAttributeNames: {
             "#status": "status"
         },
         ExpressionAttributeValues: {
-            ":status": "in_progress"
+            ":status": "IN_PROGRESS"
         },
         ReturnValues: "UPDATED_NEW"
     }));
 
     const imageBuffer = await getImageBuffer(bucketName, objectKey);
     const imageBase64 = imageBuffer.toString("base64");
+
+    const prompt = `
+      Analyze this food image and provide a detailed nutritional estimate. 
+      Return strictly valid JSON with no markdown formatting around it:
+      {
+        "dish_name": "Name of the meal",
+        "items": [
+          {
+            "name": "Item name",
+            "portion_estimate": "Estimated weight or portion",
+            "calories": 250,
+            "protein_g": 20,
+            "carbs_g": 15,
+            "fat_g": 10
+          }
+        ],
+        "total_nutrition": {
+          "calories": 0,
+          "protein_g": 0,
+          "carbs_g": 0,
+          "fat_g": 0
+        }
+      }
+    `;
 
     return {
         bucketName,
