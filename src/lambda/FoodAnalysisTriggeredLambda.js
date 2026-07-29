@@ -37,6 +37,44 @@ const getUserIdFromRequestId = (requestId) => {
     return match ? Number(match[1]) : null;
 };
 
+const invokeBedrockModel = async (prompt, imageBase64) => {
+    const requestBody = {
+        anthropic_version: "bedrock-2023-05-31",
+        max_tokens: 1000,
+        messages: [
+            {
+                role: "user",
+                content: [
+                    {
+                        type: "text",
+                        text: prompt,
+                    },
+                    {
+                        type: "image",
+                        source: {
+                            type: "base64",
+                            media_type: "image/jpeg",
+                            data: imageBase64,
+                        },
+                    },
+                ],
+            },
+        ],
+    };
+
+    const command = new InvokeModelCommand({
+        modelId: MODEL_ID,
+        contentType: "application/json",
+        accept: "application/json",
+        body: JSON.stringify(requestBody),
+    });
+
+    const response = await bedrockClient.send(command);
+    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+
+    return responseBody.content?.[0]?.text || JSON.stringify(responseBody);
+};
+
 exports.handler = async (event = {}) => {
     const bucketName = event?.detail?.bucket?.name
         ?? event?.Records?.[0]?.s3?.bucket?.name
@@ -115,30 +153,32 @@ exports.handler = async (event = {}) => {
 
     console.log("Food detected by Rekognition. Proceeding to Bedrock analysis...");
 
-    // const prompt = `
-    //   Analyze this food image and provide a detailed nutritional estimate. 
-    //   Return strictly valid JSON with no markdown formatting around it:
-    //   {
-    //     "dish_name": "Name of the meal",
-    //     "items": [
-    //       {
-    //         "name": "Item name",
-    //         "portion_estimate": "Estimated weight or portion",
-    //         "calories": 250,
-    //         "protein_g": 20,
-    //         "carbs_g": 15,
-    //         "fat_g": 10
-    //       }
-    //     ],
-    //     "total_nutrition": {
-    //       "calories": 0,
-    //       "protein_g": 0,
-    //       "carbs_g": 0,
-    //       "fat_g": 0
-    //     }
-    //   }
-    // `;
-    
+    const prompt = `
+      Analyze this food image and provide a detailed nutritional estimate. 
+      Return strictly valid JSON with no markdown formatting around it:
+      {
+        "dish_name": "Name of the meal",
+        "items": [
+          {
+            "name": "Item name",
+            "portion_estimate": "Estimated weight or portion",
+            "calories": 250,
+            "protein_g": 20,
+            "carbs_g": 15,
+            "fat_g": 10
+          }
+        ],
+        "total_nutrition": {
+          "calories": 0,
+          "protein_g": 0,
+          "carbs_g": 0,
+          "fat_g": 0
+        }
+      }
+    `;
+
+    const bedrockResponse = await invokeBedrockModel(prompt, imageBase64);
+    console.log("Bedrock response:", bedrockResponse);
 
     return {
         bucketName,
@@ -146,7 +186,7 @@ exports.handler = async (event = {}) => {
         fileName,
         contentType: "image/jpeg",
         imageSize: imageBuffer.length,
-        imageBase64,
+        bedrockResponse,
         tableName,
     };
 };
