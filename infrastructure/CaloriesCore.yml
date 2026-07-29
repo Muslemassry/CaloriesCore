@@ -314,6 +314,14 @@ Resources:
                 Action:
                   - bedrock:InvokeModel
                 Resource: 'arn:aws:bedrock:*::foundation-model/*'
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-RekognitionPermissions"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - rekognition:DetectLabels
+                Resource: '*'
   RoleForLmbdaToAccessS3:
     Type: AWS::IAM::Role
     Properties:
