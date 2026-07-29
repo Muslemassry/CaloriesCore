@@ -191,10 +191,20 @@ exports.handler = async (event = {}) => {
 
         let parsedMealAnalysis = null;
         try {
-            let cleanedText = bedrockResponseText.trim();
-            if (cleanedText.startsWith("```")) {
-                cleanedText = cleanedText.replace(/^```[a-zA-Z]*\n?/, "").replace(/\n?```$/, "");
+            let cleanedText = (bedrockResponseText || "").trim();
+
+            const fencedMatch = cleanedText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+            if (fencedMatch && fencedMatch[1]) {
+                cleanedText = fencedMatch[1].trim();
+            } else if (cleanedText.startsWith("```")) {
+                cleanedText = cleanedText.replace(/^```[a-zA-Z]*\s*/i, "").replace(/\s*```$/i, "");
             }
+
+            const jsonObjectMatch = cleanedText.match(/\{[\s\S]*\}/);
+            if (jsonObjectMatch) {
+                cleanedText = jsonObjectMatch[0];
+            }
+
             parsedMealAnalysis = JSON.parse(cleanedText.trim());
         } catch (parseError) {
             console.warn("Bedrock response was not valid JSON. Storing as string.", parseError);
