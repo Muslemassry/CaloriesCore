@@ -71,6 +71,7 @@ const invokeBedrockModel = async (prompt, imageBase64) => {
     });
 
     const response = await bedrockClient.send(command);
+    console.log(response);
     const responseBody = JSON.parse(new TextDecoder().decode(response.body));
 
     return responseBody.content?.[0]?.text || JSON.stringify(responseBody);
