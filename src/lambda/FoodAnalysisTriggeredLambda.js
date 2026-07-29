@@ -189,12 +189,18 @@ exports.handler = async (event = {}) => {
         const bedrockResponseText = await invokeBedrockModel(prompt, imageBase64);
         console.log("Bedrock response:", bedrockResponseText);
 
+        const cleanedResponseText = (bedrockResponseText || "")
+            .replace(/^```json\s*/i, "")
+            .replace(/^```\s*/i, "")
+            .replace(/```$/i, "")
+            .trim();
+
         let parsedMealAnalysis = null;
         try {
-            parsedMealAnalysis = JSON.parse(bedrockResponseText);
+            parsedMealAnalysis = JSON.parse(cleanedResponseText);
         } catch (parseError) {
             console.warn("Bedrock response was not valid JSON. Storing as string.", parseError);
-            parsedMealAnalysis = bedrockResponseText;
+            parsedMealAnalysis = cleanedResponseText;
         }
 
         await docClient.send(new UpdateCommand({
