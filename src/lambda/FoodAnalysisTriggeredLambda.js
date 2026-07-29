@@ -186,8 +186,16 @@ exports.handler = async (event = {}) => {
         `;
 
         console.log("Invoking Bedrock");
-        const bedrockResponse = await invokeBedrockModel(prompt, imageBase64);
-        console.log("Bedrock response:", bedrockResponse);
+        const bedrockResponseText = await invokeBedrockModel(prompt, imageBase64);
+        console.log("Bedrock response:", bedrockResponseText);
+
+        let parsedMealAnalysis = null;
+        try {
+            parsedMealAnalysis = JSON.parse(bedrockResponseText);
+        } catch (parseError) {
+            console.warn("Bedrock response was not valid JSON. Storing as string.", parseError);
+            parsedMealAnalysis = bedrockResponseText;
+        }
 
         await docClient.send(new UpdateCommand({
             TableName: tableName,
@@ -202,7 +210,7 @@ exports.handler = async (event = {}) => {
             },
             ExpressionAttributeValues: {
                 ":status": "PROCESSED",
-                ":mealAnalysis": bedrockResponse
+                ":mealAnalysis": parsedMealAnalysis
             },
             ReturnValues: "UPDATED_NEW"
         }));
@@ -214,7 +222,7 @@ exports.handler = async (event = {}) => {
             fileName,
             contentType: "image/jpeg",
             imageSize: imageBuffer.length,
-            bedrockResponse,
+            bedrockResponse: parsedMealAnalysis,
             tableName,
         };
     } catch (error) {
