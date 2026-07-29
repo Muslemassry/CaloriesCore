@@ -76,6 +76,56 @@ const invokeBedrockModel = async (prompt, imageBase64) => {
     return responseBody.content?.[0]?.text || JSON.stringify(responseBody);
 };
 
+const normalizeDynamoDbValue = (value) => {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(normalizeDynamoDbValue);
+    }
+
+    if (typeof value !== "object") {
+        return value;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(value, "S")) {
+        return value.S;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(value, "N")) {
+        return Number(value.N);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(value, "BOOL")) {
+        return value.BOOL;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(value, "NULL") && value.NULL) {
+        return null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(value, "L")) {
+        return value.L.map(normalizeDynamoDbValue);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(value, "M")) {
+        return Object.fromEntries(
+            Object.entries(value.M).map(([key, nestedValue]) => [key, normalizeDynamoDbValue(nestedValue)])
+        );
+    }
+
+    if (Object.prototype.hasOwnProperty.call(value, "SS")) {
+        return value.SS;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(value, "NS")) {
+        return value.NS.map(Number);
+    }
+
+    return value;
+};
+
 exports.handler = async (event = {}) => {
     try {
         const bucketName = event?.detail?.bucket?.name
@@ -205,7 +255,8 @@ exports.handler = async (event = {}) => {
                 cleanedText = jsonObjectMatch[0];
             }
 
-            parsedMealAnalysis = JSON.parse(cleanedText.trim());
+            const parsedRawMealAnalysis = JSON.parse(cleanedText.trim());
+            parsedMealAnalysis = normalizeDynamoDbValue(parsedRawMealAnalysis);
         } catch (parseError) {
             console.warn("Bedrock response was not valid JSON. Storing as string.", parseError);
             parsedMealAnalysis = bedrockResponseText;
