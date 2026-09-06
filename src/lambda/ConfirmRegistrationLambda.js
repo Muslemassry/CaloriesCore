@@ -42,8 +42,7 @@ exports.handler = async (event = {}) => {
         return {
             statusCode: 400,
             body: JSON.stringify({
-                message: 'Request body must include email and otp',
-                received: body
+                message: 'Request body must include email and otp'
             })
         };
     }

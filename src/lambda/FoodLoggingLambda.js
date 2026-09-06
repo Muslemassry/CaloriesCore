@@ -3,8 +3,8 @@ const { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand } = requ
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
-const mealLogTableName = 'MealLog-dev';
-const dayIntakeTableName = 'DayIntake-dev';
+const mealLogTableName = process.env.MEAL_LOG_TABLE_NAME || 'MealLog-dev';
+const dayIntakeTableName = process.env.DAY_INTAKE_TABLE_NAME || 'DayIntake-dev';
 const counterTableName = process.env.USER_ID_COUNTER_TABLE_NAME || 'UserIdCounter-dev';
 
 const parseRequestBody = (event = {}) => {
@@ -47,6 +47,13 @@ exports.handler = async (event = {}) => {
         event.requestContext?.authorizer?.jwt?.claims ?? {};
     const email = claims['cognito:username'];
     const userId = claims['custom:user_id'];
+
+    if (!userId) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ message: 'Authentication required' })
+        };
+    }
     
     console.log('Authenticated user email:', email);
     console.log('Authenticated user ID:', userId);
@@ -67,22 +74,21 @@ exports.handler = async (event = {}) => {
         };
     }
 
-    const logId = await getNextUserId();
-    const now = new Date();
-    const date = now.toISOString().split('T')[0];
-    const mealLogItem = {
-        mealLogId: Number(logId),
-        userId: Number(userId),
-        date,
-        carb: Number(carb),
-        protein: Number(protein),
-        fat: Number(fat),
-        calories: Number(calories),
-        createdAt: now.toISOString()
-    };
-    
-
     try {
+        const logId = await getNextUserId();
+        const now = new Date();
+        const date = now.toISOString().split('T')[0];
+        const mealLogItem = {
+            mealLogId: Number(logId),
+            userId: Number(userId),
+            date,
+            carb: Number(carb),
+            protein: Number(protein),
+            fat: Number(fat),
+            calories: Number(calories),
+            createdAt: now.toISOString()
+        };
+
         await docClient.send(new PutCommand({
             TableName: mealLogTableName,
             Item: mealLogItem

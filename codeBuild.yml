@@ -8,7 +8,7 @@ phases:
     commands:
       - cd src/lambda
       - npm init -y
-      - npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb @aws-sdk/client-cognito-identity-provider
+      - npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb @aws-sdk/client-cognito-identity-provider @aws-sdk/client-s3 @aws-sdk/s3-request-presigner @aws-sdk/client-rekognition @aws-sdk/client-bedrock-runtime
       - npm ci
   build:
     commands:

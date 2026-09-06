@@ -55,8 +55,7 @@ exports.handler = async (event = {}) => {
         return {
             statusCode: 400,
             body: JSON.stringify({
-                message: 'Missing required registration fields',
-                received: body
+                message: 'Missing required registration fields'
             })
         };
     }
@@ -114,7 +113,7 @@ exports.handler = async (event = {}) => {
         console.error('Error registering user:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Error registering user', error })
+            body: JSON.stringify({ message: 'Error registering user' })
         };
     }
 };

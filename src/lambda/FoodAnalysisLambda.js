@@ -32,6 +32,20 @@ exports.handler = async (event = {}) => {
     const email = claims['cognito:username'];
     const userId = claims['custom:user_id'];
 
+    if (!email || !userId) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ error: 'Authentication required' })
+        };
+    }
+
+    if (!tableName || !bucketName) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Service configuration is missing' })
+        };
+    }
+
     const body = parseRequestBody(event);
     const imageName = body.name;
     const contentType = body.contentType || 'application/octet-stream';
@@ -69,7 +83,7 @@ exports.handler = async (event = {}) => {
     }));
 
     console.log('Generated imageId:', imageId);
-    console.log('Generated presignedUrl:', presignedUrl);
+    console.log('Generated meal analysis upload request:', { imageId, objectKey });
 
     return {
         statusCode: 200,

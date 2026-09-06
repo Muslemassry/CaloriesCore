@@ -356,6 +356,115 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: "arn:aws:logs:*:*:*"
+  RoleForGoalsLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-GoalsRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-GoalsDynamoPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-GoalsLogsPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  RoleForProfileLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-ProfileRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-ProfileDynamoPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-ProfileLogsPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+  RoleForMealManagementLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-MealManagementRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-MealManagementDynamoPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-MealManagementLogsPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
   # lambda functions
   LoginLambdaFunction:
     Type: AWS::Lambda::Function
@@ -368,6 +477,7 @@ Resources:
       Environment:
         Variables:
           USER_POOL_ID: !Ref UserPoolId
+          USER_TABLE_NAME: !Sub "UserTable-${Environment}"
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
         S3Key: !Ref SourceCodeS3Key
@@ -449,6 +559,11 @@ Resources:
       Handler: FoodLoggingLambda.handler
       Timeout: 5
       Runtime: nodejs20.x
+      Environment:
+        Variables:
+          MEAL_LOG_TABLE_NAME: !Sub "MealLog-${Environment}"
+          DAY_INTAKE_TABLE_NAME: !Sub "DayIntake-${Environment}"
+          USER_ID_COUNTER_TABLE_NAME: !Sub "UserIdCounter-${Environment}"
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
         S3Key: !Ref SourceCodeS3Key
@@ -462,9 +577,61 @@ Resources:
       Handler: FoodIntakeHistoryLambda.handler
       Timeout: 5
       Runtime: nodejs20.x
+      Environment:
+        Variables:
+          HISTORY_INTAKE_TABLE_NAME: !Sub "HistoryIntake-${Environment}"
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
         S3Key: !Ref SourceCodeS3Key
+      Architectures:
+        - x86_64
+  GoalsLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "GoalsLambdaFunction-${Environment}-${LambdaVersion}"
+      Role: !GetAtt RoleForGoalsLambdaFunction.Arn
+      Handler: GoalsLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code:
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeS3Key
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Sub "UserTable-${Environment}"
+      Architectures:
+        - x86_64
+  ProfileLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "ProfileLambdaFunction-${Environment}-${LambdaVersion}"
+      Role: !GetAtt RoleForProfileLambdaFunction.Arn
+      Handler: ProfileLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code:
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeS3Key
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Sub "UserTable-${Environment}"
+      Architectures:
+        - x86_64
+  MealManagementLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "MealManagementLambdaFunction-${Environment}-${LambdaVersion}"
+      Role: !GetAtt RoleForMealManagementLambdaFunction.Arn
+      Handler: MealManagementLambda.handler
+      Timeout: 5
+      Runtime: nodejs20.x
+      Code:
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeS3Key
+      Environment:
+        Variables:
+          MEAL_LOG_TABLE_NAME: !Sub "MealLog-${Environment}"
+          USER_ID_COUNTER_TABLE_NAME: !Sub "UserIdCounter-${Environment}"
       Architectures:
         - x86_64
   # api gatewayrole for logging
@@ -532,6 +699,102 @@ Resources:
       ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
       PathPart: "food-intake-history"
       RestApiId: !Ref CaloriesCoreFunctionsApi
+  AuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "auth"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  RegisterAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "register"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  VerifyEmailAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "verify-email"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  ResendVerificationCodeAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "resend-verification-code"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  LoginAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "login"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  ForgotPasswordAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "forgot-password"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  VerifyResetCodeAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "verify-reset-code"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  ResendResetCodeAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "resend-reset-code"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  ResetPasswordAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "reset-password"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  RefreshAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "refresh"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  LogoutAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref AuthResource
+      PathPart: "logout"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  GoalSetupResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "goal-setup"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  GoalsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "goals"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  MealsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
+      PathPart: "meals"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  MealsAnalyzeResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref MealsResource
+      PathPart: "analyze"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+  MealIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref MealsResource
+      PathPart: "{mealId}"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
   #authorizer
   ApiGatewayCognitoAuthorizer:
     Type: AWS::ApiGateway::Authorizer
@@ -577,6 +840,249 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConfirmRegistrationLambdaFunction.Arn}/invocations
+  RegisterAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref RegisterAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
+  VerifyEmailAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref VerifyEmailAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConfirmRegistrationLambdaFunction.Arn}/invocations
+  ResendVerificationCodeAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ResendVerificationCodeAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
+  LoginAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref LoginAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+  ForgotPasswordAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ForgotPasswordAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+  VerifyResetCodeAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref VerifyResetCodeAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+  ResendResetCodeAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ResendResetCodeAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+  ResetPasswordAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ResetPasswordAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+  RefreshAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref RefreshAuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+  LogoutAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref LogoutAuthResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+  GoalSetupPatchMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref GoalSetupResource
+      HttpMethod: PATCH
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProfileLambdaFunction.Arn}/invocations
+  GoalSetupGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref GoalSetupResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProfileLambdaFunction.Arn}/invocations
+  GoalSetupPutMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref GoalSetupResource
+      HttpMethod: PUT
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProfileLambdaFunction.Arn}/invocations
+  GoalsGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref GoalsResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoalsLambdaFunction.Arn}/invocations
+  GoalsPutMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref GoalsResource
+      HttpMethod: PUT
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoalsLambdaFunction.Arn}/invocations
+  MealsAnalyzeMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealsAnalyzeResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FoodAnalysisLambdaFunction.Arn}/invocations
+  MealsGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealsResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MealManagementLambdaFunction.Arn}/invocations
+  MealsPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealsResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MealManagementLambdaFunction.Arn}/invocations
+  MealDetailGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealIdResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MealManagementLambdaFunction.Arn}/invocations
+  MealDetailPutMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealIdResource
+      HttpMethod: PUT
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MealManagementLambdaFunction.Arn}/invocations
+  MealDetailDeleteMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealIdResource
+      HttpMethod: DELETE
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MealManagementLambdaFunction.Arn}/invocations
   FoodAnalysisMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -635,6 +1141,27 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/confirm-registration"
+  RegisterAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RegistrationLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/register"
+  VerifyEmailAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ConfirmRegistrationLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/verify-email"
+  ResendVerificationCodeAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RegistrationLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/resend-verification-code"
   FoodAnalysisLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -642,6 +1169,13 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/food-analysis"
+  MealsAnalyzeLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FoodAnalysisLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/meals/analyze"
   FoodLoggingLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -656,6 +1190,125 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/GET/food-intake-history"
+  GoalsLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GoalsLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/GET/goals"
+  GoalsPutLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GoalsLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/PUT/goals"
+  ProfileLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProfileLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/GET/goal-setup"
+  ProfilePatchLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProfileLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/PATCH/goal-setup"
+  ProfilePutLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProfileLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/PUT/goal-setup"
+  MealManagementLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MealManagementLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/GET/meals"
+  MealManagementPostLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MealManagementLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/meals"
+  MealManagementByIdLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MealManagementLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/GET/meals/*"
+  MealManagementPutLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MealManagementLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/PUT/meals/*"
+  MealManagementDeleteLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MealManagementLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/DELETE/meals/*"
+  LoginAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoginLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/login"
+  ForgotPasswordAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoginLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/forgot-password"
+  VerifyResetCodeAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoginLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/verify-reset-code"
+  ResendResetCodeAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoginLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/resend-reset-code"
+  ResetPasswordAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoginLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/reset-password"
+  RefreshAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoginLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/refresh"
+  LogoutAuthLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoginLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/auth/logout"
   Deployment:
     Type: AWS::ApiGateway::Deployment
     Properties:
@@ -667,6 +1320,27 @@ Resources:
       - RegistrationPublicMethod
       - ConfirmRegistrationPublicMethod
       - LoginMethod
+      - RegisterAuthMethod
+      - VerifyEmailAuthMethod
+      - ResendVerificationCodeAuthMethod
+      - LoginAuthMethod
+      - ForgotPasswordAuthMethod
+      - VerifyResetCodeAuthMethod
+      - ResendResetCodeAuthMethod
+      - ResetPasswordAuthMethod
+      - RefreshAuthMethod
+      - LogoutAuthMethod
+      - GoalSetupPatchMethod
+      - GoalSetupGetMethod
+      - GoalSetupPutMethod
+      - GoalsGetMethod
+      - GoalsPutMethod
+      - MealsAnalyzeMethod
+      - MealsGetMethod
+      - MealsPostMethod
+      - MealDetailGetMethod
+      - MealDetailPutMethod
+      - MealDetailDeleteMethod
   Stage:
     Type: AWS::ApiGateway::Stage
     Properties:
@@ -748,6 +1422,24 @@ Outputs:
   ConfirmRegistrationEndpoint:
     Description: "API Gateway endpoint for confirm registration"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/confirm-registration"
+  AuthRegisterEndpoint:
+    Description: "API Gateway endpoint for OpenAPI registration"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/auth/register"
+  AuthLoginEndpoint:
+    Description: "API Gateway endpoint for OpenAPI login"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/auth/login"
+  GoalSetupEndpoint:
+    Description: "API Gateway endpoint for goal setup"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/goal-setup"
+  GoalsEndpoint:
+    Description: "API Gateway endpoint for user goals"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/goals"
+  MealsEndpoint:
+    Description: "API Gateway endpoint for meals list and creation"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/meals"
+  MealsAnalyzeEndpoint:
+    Description: "API Gateway endpoint for meal analysis"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/meals/analyze"
   FoodAnalysisEndpoint:
     Description: "API Gateway endpoint for food analysis"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-analysis"

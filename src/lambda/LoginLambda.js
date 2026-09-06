@@ -3,7 +3,7 @@ const { DynamoDBDocumentClient, QueryCommand } = require("@aws-sdk/lib-dynamodb"
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
-const tableName = 'UserTable-dev';
+const tableName = process.env.USER_TABLE_NAME || 'UserTable-dev';
 
 const parseRequestBody = (event = {}) => {
     if (!event.body) {
@@ -29,6 +29,13 @@ exports.handler = async (event = {}) => {
         event.requestContext?.authorizer?.jwt?.claims ?? {};
     const email = claims['cognito:username'];
     const userId = claims['custom:user_id'];
+
+    if (!email || !userId) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ error: 'Authentication required' })
+        };
+    }
     
     try {
         const queryParams = {
