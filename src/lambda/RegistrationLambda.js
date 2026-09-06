@@ -1,6 +1,8 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
+const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
 
+const sesClient = new SESClient({ region: "us-east-1" });
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 const tableName = process.env.USER_TABLE_NAME || 'UserTable-dev';
@@ -21,6 +23,38 @@ const parseRequestBody = (event = {}) => {
     }
 
     return event.body;
+};
+
+const sendOtpEmail = async (recipientEmail, otpCode) => {
+  const params = {
+    Source: "no-reply@yourdomain.com", // Must be a verified identity in SES
+    Destination: {
+      ToAddresses: [recipientEmail],
+    },
+    Message: {
+      Subject: {
+        Data: "Your Verification Code",
+        Charset: "UTF-8",
+      },
+      Body: {
+        Html: {
+          Data: `
+            <h1>Registration Verification</h1>
+            <p>Your OTP code is: <strong>${otpCode}</strong></p>
+            <p>This code expires in 10 minutes.</p>
+          `,
+          Charset: "UTF-8",
+        },
+        Text: {
+          Data: `Your OTP code is: ${otpCode}`,
+          Charset: "UTF-8",
+        },
+      },
+    },
+  };
+
+  const command = new SendEmailCommand(params);
+  return await sesClient.send(command);
 };
 
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
@@ -101,8 +135,8 @@ exports.handler = async (event = {}) => {
             }
         };
 
+        await sendOtpEmail(email, otp);
         await docClient.send(new PutCommand(params));
-
         return {
             statusCode: 201,
             body: JSON.stringify({
