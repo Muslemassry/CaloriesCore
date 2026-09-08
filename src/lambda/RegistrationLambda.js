@@ -25,7 +25,7 @@ const parseRequestBody = (event = {}) => {
     return event.body;
 };
 
-const sendOtpEmail = async (recipientEmail, otpCode) => {
+const sendOtpEmail = async (recipientName, recipientEmail, otpCode) => {
   const params = {
     Source: "m.amaragy@gmail.com", // Must be a verified identity in SES
     Destination: {
@@ -33,20 +33,30 @@ const sendOtpEmail = async (recipientEmail, otpCode) => {
     },
     Message: {
       Subject: {
-        Data: "Your Verification Code",
+        Data: "Your BiteIQ verification code",
         Charset: "UTF-8",
       },
       Body: {
         Html: {
           Data: `
-            <h1>Registration Verification</h1>
-            <p>Your OTP code is: <strong>${otpCode}</strong></p>
-            <p>This code expires in 10 minutes.</p>
+            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px;">
+              <h2 style="color: #16a34a; margin: 0 0 16px;">BiteIQ — Verify your email</h2>
+              <p style="color: #374151;">Hi ${recipientName},</p>
+              <p style="color: #374151;">Thanks for signing up for BiteIQ! Use the verification code below to confirm your email address:</p>
+              <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111827; background: #f3f4f6; padding: 16px; text-align: center; border-radius: 8px; margin: 24px 0;">${otpCode}</div>
+              <p style="color: #6b7280; font-size: 14px;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
+            </div>
           `,
           Charset: "UTF-8",
         },
         Text: {
-          Data: `Your OTP code is: ${otpCode}`,
+          Data: [
+            `Hi ${recipientName},`,
+            ``,
+            `Thanks for signing up for BiteIQ! Your email verification code is: ${otpCode}`,
+            ``,
+            `This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.`
+          ].join("\n"),
           Charset: "UTF-8",
         },
       },
@@ -158,12 +168,15 @@ exports.handler = async (event = {}) => {
             }
         };
 
-        await sendOtpEmail(email, otp);
+        await sendOtpEmail(name, email, otp);
         await docClient.send(new PutCommand(params));
 
         return {
             statusCode: 201,
-            body: JSON.stringify({ email })
+            body: JSON.stringify({
+                message: `Verification code sent to ${email}`,
+                email
+            })
         };
     } catch (error) {
         console.error('Error registering user:', error);
