@@ -27,7 +27,7 @@ const parseRequestBody = (event = {}) => {
 
 const sendOtpEmail = async (recipientEmail, otpCode) => {
   const params = {
-    Source: "no-reply@yourdomain.com", // Must be a verified identity in SES
+    Source: "m.amaragy@gmail.com", // Must be a verified identity in SES
     Destination: {
       ToAddresses: [recipientEmail],
     },
