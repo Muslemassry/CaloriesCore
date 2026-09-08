@@ -482,7 +482,7 @@ Resources:
       Role: !GetAtt RoleForLoginLambdaFunction.Arn
       Handler: LoginLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Environment:
         Variables:
           USER_POOL_ID: !Ref UserPoolId
@@ -499,7 +499,7 @@ Resources:
       Role: !GetAtt RoleForRegistrationLambdaFunction.Arn
       Handler: RegistrationLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Environment:
         Variables:
           USER_TABLE_NAME: !Sub "UserTable-${Environment}"
@@ -516,7 +516,7 @@ Resources:
       Role: !GetAtt RoleForConfirmRegistrationLambdaFunction.Arn
       Handler: ConfirmRegistrationLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Environment:
         Variables:
           USER_TABLE_NAME: !Sub "UserTable-${Environment}"
@@ -533,7 +533,7 @@ Resources:
       Role: !GetAtt RoleForFoodAnalysisLambdaFunction.Arn
       Handler: FoodAnalysisLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Environment:
         Variables:
           Food_Analysis_Request_Table_Name: !Sub "MealAnalysisRequest-${Environment}"
@@ -551,7 +551,7 @@ Resources:
       Handler: FoodAnalysisTriggeredLambda.handler
       Timeout: 60
       MemorySize: 512
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Environment:
         Variables:
           Food_Analysis_Request_Table_Name: !Sub "MealAnalysisRequest-${Environment}"
@@ -567,7 +567,7 @@ Resources:
       Role: !GetAtt RoleForLmbdaToAccessDynamoDB.Arn
       Handler: FoodLoggingLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Environment:
         Variables:
           MEAL_LOG_TABLE_NAME: !Sub "MealLog-${Environment}"
@@ -585,7 +585,7 @@ Resources:
       Role: !GetAtt RoleForLmbdaToAccessDynamoDB.Arn
       Handler: FoodIntakeHistoryLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Environment:
         Variables:
           HISTORY_INTAKE_TABLE_NAME: !Sub "HistoryIntake-${Environment}"
@@ -601,7 +601,7 @@ Resources:
       Role: !GetAtt RoleForGoalsLambdaFunction.Arn
       Handler: GoalsLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Code:
         S3Bucket: !Ref SourceCodeBucketName
         S3Key: !Ref SourceCodeS3Key
@@ -617,7 +617,7 @@ Resources:
       Role: !GetAtt RoleForProfileLambdaFunction.Arn
       Handler: ProfileLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Code:
         S3Bucket: !Ref SourceCodeBucketName
         S3Key: !Ref SourceCodeS3Key
@@ -633,7 +633,7 @@ Resources:
       Role: !GetAtt RoleForMealManagementLambdaFunction.Arn
       Handler: MealManagementLambda.handler
       Timeout: 5
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Code:
         S3Bucket: !Ref SourceCodeBucketName
         S3Key: !Ref SourceCodeS3Key
