@@ -77,22 +77,49 @@ const getNextUserId = async () => {
     return Number(result.Attributes?.currentValue || 0);
 };
 
+const EMAIL_REGEX = /^[\w.+-]+@[\w-]+\.[\w.-]+$/;
+
+const validateRegistration = ({ name, email, password } = {}) => {
+    const normalizedName = typeof name === 'string' ? name.trim() : '';
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+
+    if (!normalizedName) {
+        return { error: 'Name is required.' };
+    }
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+        return { error: 'A valid email address is required.' };
+    }
+
+    if (
+        typeof password !== 'string' ||
+        password.length < 8 ||
+        !/[A-Z]/.test(password) ||
+        !/[0-9]/.test(password)
+    ) {
+        return { error: 'Password must be at least 8 characters long and include at least one uppercase letter and one number.' };
+    }
+
+    return { name: normalizedName, email: normalizedEmail };
+};
+
+const sendError = (statusCode, code, message) => ({
+    statusCode,
+    body: JSON.stringify({
+        success: false,
+        error: { code, message }
+    })
+});
+
 exports.handler = async (event = {}) => {
     const body = parseRequestBody(event);
-    const email = body.email
-    const firstName = body.firstName;
-    const lastName = body.lastName;
-    const age = body.age;
-    const gender = body.gender
+    const validation = validateRegistration(body);
 
-    if (!email || !firstName || !lastName || age === undefined || !gender) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({
-                message: 'Missing required registration fields'
-            })
-        };
+    if (validation.error) {
+        return sendError(422, 'VALIDATION_ERROR', validation.error);
     }
+
+    const { name, email } = validation;
 
     try {
         const existingUsersResponse = await docClient.send(new QueryCommand({
@@ -107,26 +134,22 @@ exports.handler = async (event = {}) => {
         const existingUser = existingUsersResponse.Items?.[0];
 
         if (existingUser?.verified === true) {
-            return {
-                statusCode: 409,
-                body: JSON.stringify({
-                    message: 'User is already Registered'
-                })
-            };
+            return sendError(409, 'ACCOUNT_ALREADY_EXISTS', 'This account already exists. Please sign in.');
         }
 
         const otp = generateOtp();
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         const userId = existingUser?.userId || await getNextUserId();
+
+        // The password is validated above but intentionally not stored here:
+        // Cognito owns credentials and issues the real password during
+        // /auth/verify-email (ConfirmRegistrationLambda).
         const params = {
             TableName: tableName,
             Item: {
                 userId,
                 email,
-                firstName,
-                lastName,
-                age: Number(age),
-                gender,
+                name,
                 createdAt: existingUser?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 verified: false,
@@ -137,17 +160,13 @@ exports.handler = async (event = {}) => {
 
         await sendOtpEmail(email, otp);
         await docClient.send(new PutCommand(params));
+
         return {
             statusCode: 201,
-            body: JSON.stringify({
-                message: 'OTP generated successfully'
-            })
+            body: JSON.stringify({ email })
         };
     } catch (error) {
         console.error('Error registering user:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Error registering user' })
-        };
+        return sendError(500, 'INTERNAL_ERROR', 'Error registering user');
     }
 };

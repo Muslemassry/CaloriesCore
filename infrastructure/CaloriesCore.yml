@@ -838,17 +838,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
-  ConfirmRegistrationPublicMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref CaloriesCoreFunctionsApi
-      ResourceId: !Ref ConfirmRegistrationResource
-      HttpMethod: POST
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConfirmRegistrationLambdaFunction.Arn}/invocations
   RegisterAuthMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -860,6 +849,17 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
+  ConfirmRegistrationPublicMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ConfirmRegistrationResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConfirmRegistrationLambdaFunction.Arn}/invocations
   VerifyEmailAuthMethod:
     Type: AWS::ApiGateway::Method
     Properties:
