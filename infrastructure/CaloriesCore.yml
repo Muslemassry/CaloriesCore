@@ -827,17 +827,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
-  RegistrationPublicMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref CaloriesCoreFunctionsApi
-      ResourceId: !Ref RegistrationResource
-      HttpMethod: POST
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
   RegisterAuthMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -1136,13 +1125,6 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/login"
-  RegistrationLambdaFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref RegistrationLambdaFunction
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/register"
   ConfirmRegistrationLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1156,7 +1138,7 @@ Resources:
       FunctionName: !Ref RegistrationLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/*/authenticate/register"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/authenticate/register"
   VerifyEmailAuthLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1327,7 +1309,6 @@ Resources:
       - FoodLoggingMethod
       - FoodAnalysisMethod
       - FoodIntakeHistoryMethod
-      - RegistrationPublicMethod
       - ConfirmRegistrationPublicMethod
       - LoginMethod
       - RegisterAuthMethod
