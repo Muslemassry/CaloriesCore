@@ -1156,7 +1156,7 @@ Resources:
       FunctionName: !Ref RegistrationLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/authenticate/register"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/*/authenticate/register"
   VerifyEmailAuthLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
