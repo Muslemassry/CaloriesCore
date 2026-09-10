@@ -1304,7 +1304,7 @@ Resources:
     Type: AWS::ApiGateway::Deployment
     Properties:
       RestApiId: !Ref CaloriesCoreFunctionsApi
-      Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}-v2"
+      Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}-v3"
     DependsOn:
       - FoodLoggingMethod
       - FoodAnalysisMethod
