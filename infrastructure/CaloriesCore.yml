@@ -1138,7 +1138,7 @@ Resources:
       FunctionName: !Ref RegistrationLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/*/register"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/authenticate/register"
   VerifyEmailAuthLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1304,7 +1304,7 @@ Resources:
     Type: AWS::ApiGateway::Deployment
     Properties:
       RestApiId: !Ref CaloriesCoreFunctionsApi
-      Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}"
+      Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}-v2"
     DependsOn:
       - FoodLoggingMethod
       - FoodAnalysisMethod
