@@ -1367,7 +1367,7 @@ Resources:
                 "logs:CreateLogStream",
                 "logs:PutLogEvents"
               ],
-              "Resource": "${S3EventDebugLogGroup.Arn}:*"
+              "Resource": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/events/${SourceCodeBucketName}-debug-logs:*"
             }
           ]
         }
@@ -1391,7 +1391,7 @@ Resources:
       Targets:
         - Arn: !GetAtt FoodAnalysisTriggeredLambdaFunction.Arn
           Id: FoodAnalysisTriggeredLambdaFunctionTarget
-        - Arn: !GetAtt S3EventDebugLogGroup.Arn
+        - Arn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/events/${SourceCodeBucketName}-debug-logs"
           Id: TargetCloudWatchLogGroup
   AllowEventBridgeToInvokeLambda:
     Type: AWS::Lambda::Permission
