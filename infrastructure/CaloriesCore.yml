@@ -1420,7 +1420,7 @@ Outputs:
     Description: "API Gateway endpoint for OpenAPI login"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticate/login"
   GoalSetupEndpoint:
-    Description: "API Gateway endpoint for goal setup"
+    Description: "API Gateway endpoint for goal setup."
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/goal-setup"
   GoalsEndpoint:
     Description: "API Gateway endpoint for user goals"
