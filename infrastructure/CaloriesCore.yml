@@ -1401,5 +1401,5 @@ Outputs:
     Description: "API Gateway endpoint for food logging"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-logging"
   FoodIntakeHistoryEndpoint:
-    Description: "API Gateway endpoint for food intake history"
+    Description: "API Gateway endpoint for food intake history."
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-intake-history"
