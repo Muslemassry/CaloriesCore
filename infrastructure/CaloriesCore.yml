@@ -732,12 +732,6 @@ Resources:
       ParentId: !Ref AuthResource
       PathPart: "resend-verification-code"
       RestApiId: !Ref CaloriesCoreFunctionsApi
-  LoginAuthResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !Ref AuthResource
-      PathPart: "login"
-      RestApiId: !Ref CaloriesCoreFunctionsApi
   ForgotPasswordAuthResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -871,17 +865,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
-  LoginAuthMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref CaloriesCoreFunctionsApi
-      ResourceId: !Ref LoginAuthResource
-      HttpMethod: POST
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
   ForgotPasswordAuthMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -1251,13 +1234,6 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/DELETE/meals/*"
-  LoginAuthLambdaFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref LoginLambdaFunction
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/authenticate/login"
   ForgotPasswordAuthLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1314,7 +1290,6 @@ Resources:
       - RegisterAuthMethod
       - VerifyEmailAuthMethod
       - ResendVerificationCodeAuthMethod
-      - LoginAuthMethod
       - ForgotPasswordAuthMethod
       - VerifyResetCodeAuthMethod
       - ResendResetCodeAuthMethod
@@ -1401,24 +1376,12 @@ Resources:
       Principal: 'events.amazonaws.com'
       SourceArn: !GetAtt EventBridgeRuleForFoodAnalysisTriggeredLambdaFunction.Arn
 Outputs:
-  ApiListEndpoint:
-    Description: "API Gateway endpoint BASE URL for the API"
-    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
-  LoginEndpoint:
-    Description: "API Gateway endpoint for login"
-    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/login"
-  RegistrationEndpoint:
-    Description: "API Gateway endpoint for registration"
-    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/register"
   ConfirmRegistrationEndpoint:
     Description: "API Gateway endpoint for confirm registration"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/confirm-registration"
   AuthRegisterEndpoint:
     Description: "API Gateway endpoint for OpenAPI registration"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticate/register"
-  AuthLoginEndpoint:
-    Description: "API Gateway endpoint for OpenAPI login"
-    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticate/login"
   GoalSetupEndpoint:
     Description: "API Gateway endpoint for goal setup."
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/goal-setup"
