@@ -123,6 +123,7 @@ exports.handler = async (event = {}) => {
             await cognitoClient.send(new AdminSetUserPasswordCommand({
                 UserPoolId: userPoolId,
                 Username: email,
+                Password: user.password,
                 Permanent: true
             }));
 

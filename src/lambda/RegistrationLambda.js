@@ -150,10 +150,8 @@ exports.handler = async (event = {}) => {
         const otp = generateOtp();
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         const userId = existingUser?.userId || await getNextUserId();
+        const password = body.password;
 
-        // The password is validated above but intentionally not stored here:
-        // Cognito owns credentials and issues the real password during
-        // /auth/verify-email (ConfirmRegistrationLambda).
         const params = {
             TableName: tableName,
             Item: {
@@ -164,7 +162,8 @@ exports.handler = async (event = {}) => {
                 updatedAt: new Date().toISOString(),
                 verified: false,
                 otp,
-                otpExpiresAt
+                otpExpiresAt,
+                password
             }
         };
 
