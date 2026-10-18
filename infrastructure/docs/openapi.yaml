@@ -1,0 +1,758 @@
+openapi: 3.0.3
+info:
+  title: BiteIQ Backend API
+  version: 1.0.0
+  description: |
+    Backend API contract derived from the BiteIQ Flutter mobile application.
+    Endpoint paths, request/response field names, enums, and validation rules
+    mirror the mobile models exactly. Base URL is a placeholder.
+servers:
+  - url: https://api.biteiq.example.com/v1
+    description: Placeholder — replace with the real environment URL.
+tags:
+  - name: Authentication
+  - name: User
+  - name: Goals
+  - name: Meals
+  - name: Meal Analysis
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Create an unverified account and issue an email verification code
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string, example: "Ada Lovelace" }
+                email: { type: string, format: email, example: "ada@example.com" }
+                password: { type: string, format: password, example: "Passw0rd" }
+      responses:
+        "201":
+          description: Account created (unverified); code issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailResponse" }
+        "409":
+          description: Account already exists (verified)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+              example: { success: false, error: { code: ACCOUNT_ALREADY_EXISTS, message: "This account already exists. Please sign in." } }
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/verify-email:
+    post:
+      tags: [Authentication]
+      summary: Verify email with a 6-digit code
+      operationId: verifyEmail
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string, pattern: "^\\d{6}$", example: "482910" }
+      responses:
+        "200":
+          description: Email verified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+        "400":
+          description: Invalid or expired code
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+              examples:
+                invalid: { value: { success: false, error: { code: INVALID_CODE, message: "The OTP is invalid or has expired." } } }
+                expired: { value: { success: false, error: { code: EXPIRED_CODE, message: "This code has expired. Request a new code to continue." } } }
+
+  /auth/resend-verification-code:
+    post:
+      tags: [Authentication]
+      summary: Re-issue an email verification code
+      operationId: resendVerificationCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Code re-issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+        "409":
+          description: Account already verified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422":
+          description: Invalid email
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate and return the user profile and tokens
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LoginResponse" }
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "403":
+          description: Email not verified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: Start password reset (anti-enumeration — always 200 for valid email)
+      operationId: forgotPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Reset code issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailResponse" }
+        "422":
+          description: Invalid email
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/verify-reset-code:
+    post:
+      tags: [Authentication]
+      summary: Verify the password-reset code
+      operationId: verifyResetCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string, pattern: "^\\d{6}$" }
+      responses:
+        "200":
+          description: Reset code verified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+        "400":
+          description: Invalid or expired code
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/resend-reset-code:
+    post:
+      tags: [Authentication]
+      summary: Re-issue a password-reset code
+      operationId: resendResetCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Code re-issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+        "422":
+          description: Invalid email
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/reset-password:
+    post:
+      tags: [Authentication]
+      summary: Set a new password after reset-code verification
+      operationId: resetPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, newPassword]
+              properties:
+                email: { type: string, format: email }
+                newPassword: { type: string, format: password }
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+        "400":
+          description: No valid reset session (expired)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422":
+          description: Password rule violation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Exchange a refresh token for a new access token (required once JWT adopted)
+      operationId: refresh
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: New tokens issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokensResponse" }
+        "401":
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Revoke server-side session/tokens (optional)
+      operationId: logout
+      responses:
+        "204":
+          description: Logged out
+
+  /goal-setup:
+    description: >
+      Operates on the authenticated user. Identity is derived from the JWT
+      claim `custom:user_id` — no user id is accepted in the path.
+    patch:
+      tags: [User]
+      summary: Mark initial goal setup as complete and return the updated profile
+      operationId: updateGoalSetupFlag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hasCompletedGoalSetup]
+              properties:
+                hasCompletedGoalSetup: { type: boolean }
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    get:
+      tags: [User]
+      summary: Load the raw onboarding selections
+      operationId: getGoalSetup
+      responses:
+        "200":
+          description: Goal setup
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GoalSetup" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: No goal setup saved yet
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    put:
+      tags: [User]
+      summary: Save the raw onboarding selections
+      operationId: saveGoalSetup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GoalSetup" }
+      responses:
+        "200":
+          description: Saved goal setup
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GoalSetup" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /goals:
+    get:
+      tags: [Goals]
+      summary: Get the user's daily nutrition targets
+      operationId: getGoals
+      responses:
+        "200":
+          description: Nutrition goals
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionGoals" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    put:
+      tags: [Goals]
+      summary: Save the user's daily nutrition targets
+      operationId: saveGoals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NutritionGoals" }
+      responses:
+        "200":
+          description: Saved goals
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionGoals" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /meals/analyze:
+    post:
+      tags: [Meal Analysis]
+      summary: Upload a meal photo and receive a synchronous AI nutrition analysis
+      operationId: analyzeMeal
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image, sourceLabel]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Meal photo bytes (camera/gallery)
+                sourceLabel:
+                  type: string
+                  enum: [camera, gallery]
+                  description: Origin of the photo
+      responses:
+        "200":
+          description: Nutrition analysis
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionAnalysis" }
+        "400":
+          description: Invalid image
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "413":
+          description: Image too large
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422":
+          description: Analysis failed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /meals:
+    get:
+      tags: [Meals]
+      summary: List the user's meals (optionally filtered by date range)
+      operationId: listMeals
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema: { type: string, format: date }
+          description: Inclusive lower bound (YYYY-MM-DD)
+        - name: endDate
+          in: query
+          required: false
+          schema: { type: string, format: date }
+          description: Inclusive upper bound (YYYY-MM-DD)
+      responses:
+        "200":
+          description: Meals
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MealList" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    post:
+      tags: [Meals]
+      summary: Log a new meal
+      operationId: createMeal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MealCreate" }
+      responses:
+        "201":
+          description: Created meal
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Meal" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /meals/{mealId}:
+    parameters:
+      - name: mealId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Meals]
+      summary: Get a single meal
+      operationId: getMeal
+      responses:
+        "200":
+          description: Meal
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Meal" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    put:
+      tags: [Meals]
+      summary: Update an existing meal
+      operationId: updateMeal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MealCreate" }
+      responses:
+        "200":
+          description: Updated meal
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Meal" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    delete:
+      tags: [Meals]
+      summary: Delete a meal
+      operationId: deleteMeal
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    EmailResponse:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email, example: "ada@example.com" }
+
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean, example: true }
+
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success: { type: boolean, example: false }
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, example: INVALID_CODE }
+            message: { type: string, example: "The OTP is invalid or has expired." }
+
+    UserProfile:
+      type: object
+      required: [id, name, email]
+      properties:
+        id: { type: string, example: "ada@example.com" }
+        name: { type: string, example: "Ada Lovelace" }
+        email: { type: string, format: email, example: "ada@example.com" }
+        hasCompletedGoalSetup: { type: boolean, default: false }
+        isVerified: { type: boolean, default: true }
+
+    LoginResponse:
+      type: object
+      required: [id, name, email, hasCompletedGoalSetup, isVerified, accessToken, refreshToken]
+      properties:
+        id: { type: string, example: "ada@example.com" }
+        name: { type: string, example: "Ada Lovelace" }
+        email: { type: string, format: email, example: "ada@example.com" }
+        hasCompletedGoalSetup: { type: boolean }
+        isVerified: { type: boolean }
+        accessToken: { type: string, description: JWT access token }
+        refreshToken: { type: string, description: Opaque refresh token }
+
+    TokensResponse:
+      type: object
+      required: [accessToken, refreshToken]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+
+    NutritionGoals:
+      type: object
+      required: [dailyCalories, proteinG, carbsG, fatG, fiberG]
+      properties:
+        dailyCalories: { type: number, example: 2155.0 }
+        proteinG: { type: number, example: 145.0 }
+        carbsG: { type: number, example: 215.0 }
+        fatG: { type: number, example: 72.0 }
+        fiberG: { type: number, example: 30.0 }
+
+    GoalSetup:
+      type: object
+      properties:
+        goal:
+          type: string
+          enum: [lose, muscle, maintain, healthier]
+          default: healthier
+        activity:
+          type: string
+          enum: [sedentary, light, active, veryActive]
+          default: light
+        age: { type: integer, example: 28 }
+        heightCm: { type: number, example: 176.0 }
+        weightKg: { type: number, example: 81.0 }
+        imperial: { type: boolean, default: false }
+        mealsPerDay: { type: integer, example: 4 }
+        diet:
+          type: string
+          enum: [none, highProtein, lowCarb, balanced]
+          default: balanced
+
+    MacroNutrients:
+      type: object
+      required: [proteinG, carbsG, fatG, fiberG]
+      properties:
+        proteinG: { type: number, example: 45.0 }
+        carbsG: { type: number, example: 72.0 }
+        fatG: { type: number, example: 18.0 }
+        fiberG: { type: number, example: 6.0 }
+
+    Meal:
+      type: object
+      required: [id, name, type, source, loggedAt, macros]
+      properties:
+        id: { type: string, example: "1725290000000000" }
+        name: { type: string, example: "Chicken Rice Bowl" }
+        type:
+          type: string
+          enum: [breakfast, lunch, dinner, snack]
+        source:
+          type: string
+          enum: [aiAnalysis, manual]
+        loggedAt: { type: string, format: date-time, example: "2026-09-02T12:40:00" }
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://images.unsplash.com/1547592180-85f173990554?w=640&q=60&auto=format&fit=crop"
+        macros: { $ref: "#/components/schemas/MacroNutrients" }
+
+    MealCreate:
+      type: object
+      required: [name, type, source, loggedAt, macros]
+      properties:
+        name: { type: string, example: "Chicken Rice Bowl" }
+        type:
+          type: string
+          enum: [breakfast, lunch, dinner, snack]
+        source:
+          type: string
+          enum: [aiAnalysis, manual]
+        loggedAt: { type: string, format: date-time, example: "2026-09-02T12:40:00" }
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://images.unsplash.com/1547592180-85f173990554?w=640&q=60&auto=format&fit=crop"
+        macros: { $ref: "#/components/schemas/MacroNutrients" }
+
+    MealList:
+      type: object
+      required: [meals]
+      properties:
+        meals:
+          type: array
+          items: { $ref: "#/components/schemas/Meal" }
+
+    NutritionAnalysis:
+      type: object
+      required: [mealName, macros]
+      properties:
+        mealName: { type: string, example: "Chicken Rice Bowl" }
+        confidence: { type: number, minimum: 0, maximum: 1, example: 0.94 }
+        detectedItems:
+          type: array
+          items: { type: string }
+          example: ["Grilled chicken", "White rice", "Avocado", "Mixed greens"]
+        note: { type: string, example: "Balanced meal with good protein and complex carbs." }
+        macros: { $ref: "#/components/schemas/MacroNutrients" }
