@@ -14,7 +14,7 @@ const cognitoClient = new CognitoIdentityProviderClient({});
 const tableName = process.env.USER_TABLE_NAME;
 const userPoolId = process.env.USER_POOL_ID;
 
-const generatePassword = () => `Aa1!${crypto.randomBytes(18).toString('base64url')}`;
+// const generatePassword = () => `Aa1!${crypto.randomBytes(18).toString('base64url')}`;
 
 const parseRequestBody = (event = {}) => {
     if (!event.body) {
@@ -102,7 +102,7 @@ exports.handler = async (event = {}) => {
 
         // Add user to Cognito User Pool
         try {
-            const password = generatePassword();
+            //const password = generatePassword();
 
             await cognitoClient.send(new AdminCreateUserCommand({
                 UserPoolId: userPoolId,
@@ -143,8 +143,7 @@ exports.handler = async (event = {}) => {
                 statusCode: 200,
                 body: JSON.stringify({
                     message: 'User confirmed successfully',
-                    email,
-                    password
+                    email
                 })
             };
         } catch (cognitoError) {

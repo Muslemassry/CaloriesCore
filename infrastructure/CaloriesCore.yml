@@ -215,6 +215,52 @@ Resources:
                   - ses:SendEmail
                   - ses:SendRawEmail
                 Resource: "*"
+  RoleForForgotPasswordLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-ForgotPasswordRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-ForgotPasswordSESSendEmailPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-ForgotPasswordLogsPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
   RoleForFoodAnalysisLambdaFunction:
     Type: AWS::IAM::Role
     Properties:
@@ -526,6 +572,23 @@ Resources:
         S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
+  ForgotPasswordLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "ForgotPasswordLambdaFunction-${Environment}-${LambdaVersion}"
+      Role: !GetAtt RoleForForgotPasswordLambdaFunction.Arn
+      Handler: ForgotPasswordLambda.handler
+      Timeout: 5
+      Runtime: nodejs24.x
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Sub "UserTable-${Environment}"
+          SOURCE_EMAIL: "m.amaragy@gmail.com"
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeS3Key
+      Architectures:
+        - x86_64
   FoodAnalysisLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -684,18 +747,6 @@ Resources:
       ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
       PathPart: "register"
       RestApiId: !Ref CaloriesCoreFunctionsApi
-  ConfirmRegistrationResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
-      PathPart: "confirm-registration"
-      RestApiId: !Ref CaloriesCoreFunctionsApi
-  FoodAnalysisResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !GetAtt CaloriesCoreFunctionsApi.RootResourceId
-      PathPart: "food-analysis"
-      RestApiId: !Ref CaloriesCoreFunctionsApi
   FoodLoggingResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -832,17 +883,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegistrationLambdaFunction.Arn}/invocations
-  ConfirmRegistrationPublicMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref CaloriesCoreFunctionsApi
-      ResourceId: !Ref ConfirmRegistrationResource
-      HttpMethod: POST
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConfirmRegistrationLambdaFunction.Arn}/invocations
   VerifyEmailAuthMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -875,7 +915,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginLambdaFunction.Arn}/invocations
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ForgotPasswordLambdaFunction.Arn}/invocations
   VerifyResetCodeAuthMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -1108,13 +1148,6 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/login"
-  ConfirmRegistrationLambdaFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref ConfirmRegistrationLambdaFunction
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/confirm-registration"
   RegisterAuthLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1136,13 +1169,6 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/authenticate/resend-verification-code"
-  FoodAnalysisLambdaFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref FoodAnalysisLambdaFunction
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/food-analysis"
   MealsAnalyzeLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1237,7 +1263,7 @@ Resources:
   ForgotPasswordAuthLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref LoginLambdaFunction
+      FunctionName: !Ref ForgotPasswordLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/authenticate/forgot-password"
@@ -1376,9 +1402,6 @@ Resources:
       Principal: 'events.amazonaws.com'
       SourceArn: !GetAtt EventBridgeRuleForFoodAnalysisTriggeredLambdaFunction.Arn
 Outputs:
-  ConfirmRegistrationEndpoint:
-    Description: "API Gateway endpoint for confirm registration"
-    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/confirm-registration"
   AuthRegisterEndpoint:
     Description: "API Gateway endpoint for OpenAPI registration"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticate/register"
@@ -1394,9 +1417,6 @@ Outputs:
   MealsAnalyzeEndpoint:
     Description: "API Gateway endpoint for meal analysis"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/meals/analyze"
-  FoodAnalysisEndpoint:
-    Description: "API Gateway endpoint for food analysis"
-    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-analysis"
   FoodLoggingEndpoint:
     Description: "API Gateway endpoint for food logging"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-logging"

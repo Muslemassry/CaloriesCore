@@ -20,7 +20,7 @@ security:
   - bearerAuth: []
 
 paths:
-  /auth/register:
+  /authenticate/register:
     post:
       tags: [Authentication]
       summary: Create an unverified account and issue an email verification code
