@@ -1389,7 +1389,7 @@ Resources:
       SourceArn: !GetAtt EventBridgeRuleForFoodAnalysisTriggeredLambdaFunction.Arn
 Outputs:
   AuthRegisterEndpoint:
-    Description: "API Gateway endpoint for OpenAPI registration"
+    Description: "API Gateway endpoint for OpenAPI registration."
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticate/register"
   AuthForgotPasswordEndpoint:
     Description: "API Gateway endpoint for forgot password"
