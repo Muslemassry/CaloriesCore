@@ -1391,6 +1391,9 @@ Outputs:
   AuthRegisterEndpoint:
     Description: "API Gateway endpoint for OpenAPI registration"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticate/register"
+  AuthForgotPasswordEndpoint:
+    Description: "API Gateway endpoint for forgot password"
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticate/forgot-password"
   GoalSetupEndpoint:
     Description: "API Gateway endpoint for goal setup."
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/goal-setup"
