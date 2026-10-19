@@ -1104,18 +1104,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MealManagementLambdaFunction.Arn}/invocations
-  FoodAnalysisMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref CaloriesCoreFunctionsApi
-      ResourceId: !Ref FoodAnalysisResource
-      HttpMethod: POST
-      AuthorizationType: COGNITO_USER_POOLS
-      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FoodAnalysisLambdaFunction.Arn}/invocations
   FoodLoggingMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -1309,7 +1297,6 @@ Resources:
       Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}-v3"
     DependsOn:
       - FoodLoggingMethod
-      - FoodAnalysisMethod
       - FoodIntakeHistoryMethod
       - LoginMethod
       - RegisterAuthMethod
