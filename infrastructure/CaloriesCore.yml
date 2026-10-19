@@ -1311,7 +1311,6 @@ Resources:
       - FoodLoggingMethod
       - FoodAnalysisMethod
       - FoodIntakeHistoryMethod
-      - ConfirmRegistrationPublicMethod
       - LoginMethod
       - RegisterAuthMethod
       - VerifyEmailAuthMethod
