@@ -26,7 +26,22 @@ const parseRequestBody = (event = {}) => {
     return event.body;
 };
 
-exports.handler = async (event = {}) => {
+// Browser clients read responses cross-origin, so every response - success or
+// error - must carry CORS headers. The API authenticates with the Authorization
+// header (no cookies), so a wildcard origin does not expose credentials.
+const CORS_ALLOWED_ORIGIN = process.env.CORS_ALLOWED_ORIGIN || "*";
+const withCors = (handler) => async (event, context) => {
+    const response = await handler(event, context);
+    return {
+        ...response,
+        headers: {
+            ...(response && response.headers ? response.headers : {}),
+            "Access-Control-Allow-Origin": CORS_ALLOWED_ORIGIN
+        }
+    };
+};
+
+exports.handler = withCors(async (event = {}) => {
     const claims = event.requestContext?.authorizer?.claims ??
         event.requestContext?.authorizer?.jwt?.claims ?? {};
     const email = claims['cognito:username'];
@@ -93,4 +108,4 @@ exports.handler = async (event = {}) => {
             presignedUrl
         })
     };
-};
+});

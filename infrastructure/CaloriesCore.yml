@@ -23,6 +23,15 @@ Parameters:
   LambdaVersion:
     Type: String
     Description: The version of the Lambda function code  
+  CorsAllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: >-
+      Origin allowed by CORS for browser clients. Defaults to "*" because the
+      Flutter web dev server picks a random localhost port and the API
+      authenticates with the Authorization header (no cookies or TLS client
+      certificates), so wildcard is not a credential leak. Set an explicit
+      origin (e.g. https://app.biteiq.example.com) to restrict production.
 Resources:
   # role for lambda functions to access dynamodb tables
   RoleForLmbdaToAccessDynamoDB:
@@ -531,6 +540,7 @@ Resources:
       Runtime: nodejs24.x
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           USER_POOL_ID: !Ref UserPoolId
           USER_TABLE_NAME: !Sub "UserTable-${Environment}"
       Code: 
@@ -548,6 +558,7 @@ Resources:
       Runtime: nodejs24.x
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           USER_TABLE_NAME: !Sub "UserTable-${Environment}"
           USER_ID_COUNTER_TABLE_NAME: !Sub "UserIdCounter-${Environment}"
       Code: 
@@ -565,6 +576,7 @@ Resources:
       Runtime: nodejs24.x
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           USER_TABLE_NAME: !Sub "UserTable-${Environment}"
           USER_POOL_ID: !Ref UserPoolId
       Code: 
@@ -582,6 +594,7 @@ Resources:
       Runtime: nodejs24.x
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           USER_TABLE_NAME: !Sub "UserTable-${Environment}"
           SOURCE_EMAIL: "m.amaragy@gmail.com"
       Code: 
@@ -599,6 +612,7 @@ Resources:
       Runtime: nodejs24.x
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           Food_Analysis_Request_Table_Name: !Sub "MealAnalysisRequest-${Environment}"
           Uploading_Bucket_Name: !Ref UploadingBucketName
       Code: 
@@ -633,6 +647,7 @@ Resources:
       Runtime: nodejs24.x
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           MEAL_LOG_TABLE_NAME: !Sub "MealLog-${Environment}"
           DAY_INTAKE_TABLE_NAME: !Sub "DayIntake-${Environment}"
           USER_ID_COUNTER_TABLE_NAME: !Sub "UserIdCounter-${Environment}"
@@ -651,6 +666,7 @@ Resources:
       Runtime: nodejs24.x
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           HISTORY_INTAKE_TABLE_NAME: !Sub "HistoryIntake-${Environment}"
       Code: 
         S3Bucket: !Ref SourceCodeBucketName
@@ -670,6 +686,7 @@ Resources:
         S3Key: !Ref SourceCodeS3Key
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           USER_TABLE_NAME: !Sub "UserTable-${Environment}"
       Architectures:
         - x86_64
@@ -686,6 +703,7 @@ Resources:
         S3Key: !Ref SourceCodeS3Key
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           USER_TABLE_NAME: !Sub "UserTable-${Environment}"
       Architectures:
         - x86_64
@@ -702,6 +720,7 @@ Resources:
         S3Key: !Ref SourceCodeS3Key
       Environment:
         Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
           MEAL_LOG_TABLE_NAME: !Sub "MealLog-${Environment}"
           USER_ID_COUNTER_TABLE_NAME: !Sub "UserIdCounter-${Environment}"
       Architectures:
@@ -1128,6 +1147,478 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FoodIntakeHistoryLambdaFunction.Arn}/invocations
+  LoginOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref LoginResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  RegisterOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref RegistrationResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  FoodLoggingOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref FoodLoggingResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  FoodIntakeHistoryOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref FoodIntakeHistoryResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  RegisterAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref RegisterAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  VerifyEmailAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref VerifyEmailAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  ResendVerificationCodeAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ResendVerificationCodeAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  ForgotPasswordAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ForgotPasswordAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  VerifyResetCodeAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref VerifyResetCodeAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  ResendResetCodeAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ResendResetCodeAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  ResetPasswordAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref ResetPasswordAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  RefreshAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref RefreshAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  LogoutAuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref LogoutAuthResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  GoalSetupOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref GoalSetupResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  GoalsOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref GoalsResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  MealsOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealsResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  MealsAnalyzeOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealsAnalyzeResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  MealIdOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealIdResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+  # Gateway responses: errors raised by API Gateway itself (authorizer
+  # rejection, unknown route, integration failure) bypass the Lambda proxy and
+  # would otherwise reach the browser without CORS headers.
+  CorsUnauthorizedGatewayResponse:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResponseType: UNAUTHORIZED
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      ResponseTemplates:
+        application/json: '{"message":"$context.error.messageString"}'
+  CorsAccessDeniedGatewayResponse:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResponseType: ACCESS_DENIED
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      ResponseTemplates:
+        application/json: '{"message":"$context.error.messageString"}'
+  CorsMissingTokenGatewayResponse:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResponseType: MISSING_AUTHENTICATION_TOKEN
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      ResponseTemplates:
+        application/json: '{"message":"$context.error.messageString"}'
+  CorsDefault4xxGatewayResponse:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResponseType: DEFAULT_4XX
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      ResponseTemplates:
+        application/json: '{"message":"$context.error.messageString"}'
+  CorsDefault5xxGatewayResponse:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResponseType: DEFAULT_5XX
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+      ResponseTemplates:
+        application/json: '{"message":"$context.error.messageString"}'
   # permission
   LoginLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1294,7 +1785,7 @@ Resources:
     Type: AWS::ApiGateway::Deployment
     Properties:
       RestApiId: !Ref CaloriesCoreFunctionsApi
-      Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}-v3"
+      Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}-v4-cors"
     DependsOn:
       - FoodLoggingMethod
       - FoodIntakeHistoryMethod
@@ -1319,6 +1810,29 @@ Resources:
       - MealDetailGetMethod
       - MealDetailPutMethod
       - MealDetailDeleteMethod
+      - LoginOptionsMethod
+      - RegisterOptionsMethod
+      - FoodLoggingOptionsMethod
+      - FoodIntakeHistoryOptionsMethod
+      - RegisterAuthOptionsMethod
+      - VerifyEmailAuthOptionsMethod
+      - ResendVerificationCodeAuthOptionsMethod
+      - ForgotPasswordAuthOptionsMethod
+      - VerifyResetCodeAuthOptionsMethod
+      - ResendResetCodeAuthOptionsMethod
+      - ResetPasswordAuthOptionsMethod
+      - RefreshAuthOptionsMethod
+      - LogoutAuthOptionsMethod
+      - GoalSetupOptionsMethod
+      - GoalsOptionsMethod
+      - MealsOptionsMethod
+      - MealsAnalyzeOptionsMethod
+      - MealIdOptionsMethod
+      - CorsUnauthorizedGatewayResponse
+      - CorsAccessDeniedGatewayResponse
+      - CorsMissingTokenGatewayResponse
+      - CorsDefault4xxGatewayResponse
+      - CorsDefault5xxGatewayResponse
   Stage:
     Type: AWS::ApiGateway::Stage
     Properties:
