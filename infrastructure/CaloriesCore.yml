@@ -31,7 +31,7 @@ Parameters:
       Flutter web dev server picks a random localhost port and the API
       authenticates with the Authorization header (no cookies or TLS client
       certificates), so wildcard is not a credential leak. Set an explicit
-      origin (e.g. https://app.biteiq.example.com) to restrict production.
+      origin (e.g. https://app.biteiq.example.com) to restrict production..
 Resources:
   # role for lambda functions to access dynamodb tables
   RoleForLmbdaToAccessDynamoDB:
