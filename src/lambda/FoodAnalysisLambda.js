@@ -16,6 +16,7 @@ const parseRequestBody = (event = {}) => {
 
     if (typeof event.body === 'string') {
         try {
+            console.log('Raw body received:', JSON.stringify(event.body));
             return JSON.parse(event.body);
         } catch (error) {
             console.error('Invalid JSON body:', error);
