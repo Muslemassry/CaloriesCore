@@ -1163,7 +1163,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1186,7 +1186,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1209,7 +1209,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1232,7 +1232,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1255,7 +1255,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1278,7 +1278,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1301,7 +1301,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1324,7 +1324,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1347,7 +1347,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1370,7 +1370,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1393,7 +1393,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1416,7 +1416,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1439,7 +1439,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1462,7 +1462,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1485,7 +1485,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1508,7 +1508,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1531,7 +1531,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1554,7 +1554,7 @@ Resources:
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
@@ -1572,7 +1572,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       ResponseTemplates:
         application/json: '{"message":"$context.error.messageString"}'
   CorsAccessDeniedGatewayResponse:
@@ -1583,7 +1583,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       ResponseTemplates:
         application/json: '{"message":"$context.error.messageString"}'
   CorsMissingTokenGatewayResponse:
@@ -1594,7 +1594,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       ResponseTemplates:
         application/json: '{"message":"$context.error.messageString"}'
   CorsDefault4xxGatewayResponse:
@@ -1605,7 +1605,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       ResponseTemplates:
         application/json: '{"message":"$context.error.messageString"}'
   CorsDefault5xxGatewayResponse:
@@ -1616,7 +1616,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
       ResponseTemplates:
         application/json: '{"message":"$context.error.messageString"}'
   # permission
@@ -1785,7 +1785,7 @@ Resources:
     Type: AWS::ApiGateway::Deployment
     Properties:
       RestApiId: !Ref CaloriesCoreFunctionsApi
-      Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}-v4-cors"
+      Description: !Sub "Deployment-${Environment}-${SourceCodeS3Key}-v5-patch-cors"
     DependsOn:
       - FoodLoggingMethod
       - FoodIntakeHistoryMethod
