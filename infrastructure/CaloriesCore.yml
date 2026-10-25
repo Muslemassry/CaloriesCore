@@ -1918,7 +1918,7 @@ Outputs:
     Description: "API Gateway endpoint for meals list and creation"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/meals"
   MealsAnalyzeEndpoint:
-    Description: "API Gateway endpoint for meal analysis"
+    Description: "API Gateway endpoint for meal analysis."
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/meals/analyze"
   FoodLoggingEndpoint:
     Description: "API Gateway endpoint for food logging"
