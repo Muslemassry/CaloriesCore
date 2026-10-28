@@ -317,6 +317,43 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: "arn:aws:logs:*:*:*"
+  RoleForFoodAnalysisResultLambdaFunction:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CaloriesCoreFunctions-${Environment}-FoodAnalysisResultRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: "*"
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaLogsPolicy7"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
   RoleForFoodAnalysisTriggeredLambdaFunction:
     Type: AWS::IAM::Role
     Properties:
@@ -620,6 +657,24 @@ Resources:
         S3Key: !Ref SourceCodeS3Key
       Architectures:
         - x86_64
+  FoodAnalysisResultLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "FoodAnalysisResultLambdaFunction-${Environment}-${LambdaVersion}"
+      Role: !GetAtt RoleForFoodAnalysisResultLambdaFunction.Arn
+      Handler: FoodAnalysisResultLambda.handler
+      Timeout: 5
+      Runtime: nodejs24.x
+      Environment:
+        Variables:
+          CORS_ALLOWED_ORIGIN: !Ref CorsAllowedOrigin
+          Food_Analysis_Request_Table_Name: !Sub "MealAnalysisRequest-${Environment}"
+          Uploading_Bucket_Name: !Ref UploadingBucketName
+      Code: 
+        S3Bucket: !Ref SourceCodeBucketName
+        S3Key: !Ref SourceCodeS3Key
+      Architectures:
+        - x86_64
   FoodAnalysisTriggeredLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -862,6 +917,12 @@ Resources:
       ParentId: !Ref MealsResource
       PathPart: "analyze"
       RestApiId: !Ref CaloriesCoreFunctionsApi
+  MealsAnalyzeResultResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref MealsAnalyzeResource
+      PathPart: "result"
+      RestApiId: !Ref CaloriesCoreFunctionsApi
   MealIdResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -1063,6 +1124,18 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FoodAnalysisLambdaFunction.Arn}/invocations
+  MealsAnalyzeResultMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealsAnalyzeResultResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FoodAnalysisResultLambdaFunction.Arn}/invocations
   MealsGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -1538,6 +1611,29 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Headers: true
             method.response.header.Access-Control-Allow-Methods: true
+  MealsAnalyzeResultOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CaloriesCoreFunctionsApi
+      ResourceId: !Ref MealsAnalyzeResultResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE,PATCH'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
   MealIdOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -1655,6 +1751,13 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/meals/analyze"
+  MealsAnalyzeResultLambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FoodAnalysisResultLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/GET/meals/analyze/result"
   FoodLoggingLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1805,6 +1908,7 @@ Resources:
       - GoalsGetMethod
       - GoalsPutMethod
       - MealsAnalyzeMethod
+      - MealsAnalyzeResultMethod
       - MealsGetMethod
       - MealsPostMethod
       - MealDetailGetMethod
@@ -1827,6 +1931,7 @@ Resources:
       - GoalsOptionsMethod
       - MealsOptionsMethod
       - MealsAnalyzeOptionsMethod
+      - MealsAnalyzeResultOptionsMethod
       - MealIdOptionsMethod
       - CorsUnauthorizedGatewayResponse
       - CorsAccessDeniedGatewayResponse
@@ -1920,6 +2025,9 @@ Outputs:
   MealsAnalyzeEndpoint:
     Description: "API Gateway endpoint for meal analysis."
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/meals/analyze"
+  MealsAnalyzeResultEndpoint:
+    Description: "API Gateway endpoint for meal analysis result."
+    Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/meals/analyze/result"
   FoodLoggingEndpoint:
     Description: "API Gateway endpoint for food logging"
     Value: !Sub "https://${CaloriesCoreFunctionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/food-logging"
