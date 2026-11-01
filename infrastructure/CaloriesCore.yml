@@ -423,6 +423,15 @@ Resources:
                 Action:
                   - rekognition:DetectLabels
                 Resource: '*'
+        - PolicyName: !Sub "CaloriesCoreFunctions-${Environment}-LambdaMarketplacePolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - aws-marketplace:ViewSubscriptions
+                  - aws-marketplace:Subscribe
+                Resource: "*"
   RoleForLmbdaToAccessS3:
     Type: AWS::IAM::Role
     Properties:
