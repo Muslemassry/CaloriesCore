@@ -12,7 +12,7 @@ const rekognitionClient = new RekognitionClient({});
 const bedrockClient = new BedrockRuntimeClient({});
 const tableName = process.env.Food_Analysis_Request_Table_Name;
 
-const MODEL_ID = "anthropic.claude-haiku-4-5-20251001-v1:0";
+const MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0";
 
 const FOOD_KEYWORDS = ["Food", "Meal", "Dish", "Beverage", "Produce", "Snack", "Dining"];
 const MIN_CONFIDENCE = 75;
