@@ -1138,7 +1138,7 @@ Resources:
     Properties:
       RestApiId: !Ref CaloriesCoreFunctionsApi
       ResourceId: !Ref MealsAnalyzeResultResource
-      HttpMethod: GET
+      HttpMethod: POST
       AuthorizationType: COGNITO_USER_POOLS
       AuthorizerId: !Ref ApiGatewayCognitoAuthorizer
       Integration:
@@ -1766,7 +1766,7 @@ Resources:
       FunctionName: !Ref FoodAnalysisResultLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/GET/meals/analyze/result"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CaloriesCoreFunctionsApi}/*/POST/meals/analyze/result"
   FoodLoggingLambdaFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
