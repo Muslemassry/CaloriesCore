@@ -45,7 +45,8 @@ exports.handler = withCors(async (event = {}) => {
         event.requestContext?.authorizer?.jwt?.claims ?? {};
     const email = claims['cognito:username'];
     const userId = claims['custom:user_id'];
-    const imageId = claims['custom:imageId'];
+    const body = parseRequestBody(event);
+    const imageId = body.imageId;
 
     if (!email || !userId) {
         return {
