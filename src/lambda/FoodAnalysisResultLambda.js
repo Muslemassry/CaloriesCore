@@ -66,7 +66,11 @@ exports.handler = withCors(async (event = {}) => {
     if (!imageId) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ error: 'Incorrect data' })
+            body: JSON.stringify({
+                error: 'Incorrect data',
+                reason: 'Missing custom:imageId claim',
+                userId
+            })
         };
     }
 
@@ -74,7 +78,12 @@ exports.handler = withCors(async (event = {}) => {
     if (!imageId.startsWith(expectedPrefix)) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ error: 'Incorrect data' })
+            body: JSON.stringify({
+                error: 'Incorrect data',
+                reason: 'imageId does not match the expected prefix',
+                imageId,
+                expectedPrefix
+            })
         };
     }
 
@@ -91,7 +100,13 @@ exports.handler = withCors(async (event = {}) => {
     if (!item) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ error: 'Incorrect data' })
+            body: JSON.stringify({
+                error: 'Incorrect data',
+                reason: 'No analysis request found for this id and user',
+                requestId: imageId,
+                userId: Number(userId),
+                tableName
+            })
         };
     }
 
