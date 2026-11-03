@@ -14,6 +14,61 @@ const tableName = process.env.Food_Analysis_Request_Table_Name;
 
 const MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0";
 
+// Temporary switch: flip to false to invoke the real Bedrock model again.
+const USE_MOCK_BEDROCK = true;
+
+const MOCK_BEDROCK_RESPONSE = {
+    dish_name: "Grilled Chicken Quinoa Bowl",
+    items: [
+        {
+            name: "Grilled chicken breast",
+            portion_estimate: "150 g",
+            calories: 248,
+            protein_g: 46.5,
+            carbs_g: 0,
+            fat_g: 5.4,
+        },
+        {
+            name: "Cooked quinoa",
+            portion_estimate: "120 g",
+            calories: 144,
+            protein_g: 5.3,
+            carbs_g: 25.2,
+            fat_g: 2.3,
+        },
+        {
+            name: "Sliced avocado",
+            portion_estimate: "50 g",
+            calories: 80,
+            protein_g: 1,
+            carbs_g: 4.3,
+            fat_g: 7.3,
+        },
+        {
+            name: "Cherry tomatoes",
+            portion_estimate: "60 g",
+            calories: 11,
+            protein_g: 0.5,
+            carbs_g: 2.3,
+            fat_g: 0.1,
+        },
+        {
+            name: "Olive oil dressing",
+            portion_estimate: "1 tbsp",
+            calories: 119,
+            protein_g: 0,
+            carbs_g: 0,
+            fat_g: 13.5,
+        },
+    ],
+    total_nutrition: {
+        calories: 602,
+        protein_g: 53.3,
+        carbs_g: 31.8,
+        fat_g: 28.6,
+    },
+};
+
 const FOOD_KEYWORDS = ["Food", "Meal", "Dish", "Beverage", "Produce", "Snack", "Dining"];
 const MIN_CONFIDENCE = 75;
 
@@ -55,6 +110,11 @@ const getRequestStatus = async (requestId, userId) => {
 };
 
 const invokeBedrockModel = async (prompt, imageBase64) => {
+    if (USE_MOCK_BEDROCK) {
+        console.log("Bedrock invocation bypassed, returning mocked response");
+        return JSON.stringify(MOCK_BEDROCK_RESPONSE);
+    }
+
     const requestBody = {
         anthropic_version: "bedrock-2023-05-31",
         max_tokens: 1000,
