@@ -16,6 +16,17 @@ Resources:
       NotificationConfiguration:
         EventBridgeConfiguration:
           EventBridgeEnabled: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - "PUT"
+            AllowedOrigins:
+              - "*" # Safe for pure native mobile apps since they don't have a fixed origin browser header
+            ExposeHeaders:
+              - "ETag"
+            MaxAge: 3000
   SourceCodeBucket:
     Type: AWS::S3::Bucket
     Properties:
