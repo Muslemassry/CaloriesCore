@@ -118,10 +118,37 @@ exports.handler = withCors(async (event = {}) => {
         };
     }
 
+    let analysis = {};
+    try {
+        analysis = typeof item.meal_analysis === 'string'
+            ? JSON.parse(item.meal_analysis)
+            : item.meal_analysis;
+    } catch (error) {
+        console.error('Failed to parse stored meal analysis', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Stored meal analysis is malformed' })
+        };
+    }
+
+    const totalNutrition = analysis.total_nutrition || {};
+
     return {
         statusCode: 200,
         body: JSON.stringify({
-            bedrockResponse: item.meal_analysis
+            status: item.status,
+            mealName: analysis.dish_name ?? '',
+            confidence: analysis.confidence ?? null,
+            detectedItems: Array.isArray(analysis.items)
+                ? analysis.items.map((entry) => entry?.name).filter(Boolean)
+                : [],
+            note: analysis.note ?? '',
+            macros: {
+                proteinG: Number(totalNutrition.protein_g ?? 0),
+                carbsG: Number(totalNutrition.carbs_g ?? 0),
+                fatG: Number(totalNutrition.fat_g ?? 0),
+                fiberG: Number(totalNutrition.fiber_g ?? 0)
+            }
         })
     };
 });

@@ -19,6 +19,8 @@ const USE_MOCK_BEDROCK = true;
 
 const MOCK_BEDROCK_RESPONSE = {
     dish_name: "Grilled Chicken Quinoa Bowl",
+    confidence: 0.94,
+    note: "Balanced meal with good protein and complex carbs.",
     items: [
         {
             name: "Grilled chicken breast",
@@ -66,6 +68,7 @@ const MOCK_BEDROCK_RESPONSE = {
         protein_g: 53.3,
         carbs_g: 31.8,
         fat_g: 28.6,
+        fiber_g: 6.0,
     },
 };
 
@@ -273,6 +276,8 @@ exports.handler = async (event = {}) => {
           Return strictly valid JSON with no markdown formatting around it:
           {
             "dish_name": "Name of the meal",
+            "confidence": 0.9,
+            "note": "A short note about the meal",
             "items": [
               {
                 "name": "Item name",
@@ -287,7 +292,8 @@ exports.handler = async (event = {}) => {
               "calories": 0,
               "protein_g": 0,
               "carbs_g": 0,
-              "fat_g": 0
+              "fat_g": 0,
+              "fiber_g": 0
             }
           }
         `;
