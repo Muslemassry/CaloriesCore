@@ -24,7 +24,7 @@ Resources:
               - "PUT"
             AllowedOrigins:
               - "*" # Safe for pure native mobile apps since they don't have a fixed origin browser header
-            ExposeHeaders:
+            ExposedHeaders:
               - "ETag"
             MaxAge: 3000
   SourceCodeBucket:
